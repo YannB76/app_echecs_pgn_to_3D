@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { Chess } from "chess.js";
 
 const canvas = document.querySelector("#scene");
@@ -17,6 +18,7 @@ const previousMoveButton = document.querySelector("#previousMove");
 const nextMoveButton = document.querySelector("#nextMove");
 const lastMoveButton = document.querySelector("#lastMove");
 const toggleSoundButton = document.querySelector("#toggleSound");
+const toggleModelsButton = document.querySelector("#toggleModels");
 
 const squareSize = 1;
 const boardOffset = 3.5;
@@ -29,6 +31,9 @@ let currentMoveIndex = 0;
 let soundEnabled = true;
 let audioContext = null;
 let activeAnimation = null;
+let realModelsEnabled = false;
+let realModelsLoading = false;
+const realModels = new Map();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x15181b);
@@ -119,6 +124,29 @@ toggleSoundButton.addEventListener("click", () => {
   if (soundEnabled) {
     playToneSequence([{ frequency: 660, duration: 0.06, gain: 0.035 }]);
   }
+});
+
+toggleModelsButton.addEventListener("click", async () => {
+  realModelsEnabled = !realModelsEnabled;
+  toggleModelsButton.textContent = realModelsEnabled ? "Style code" : "Pieces 3D";
+  toggleModelsButton.disabled = true;
+
+  if (realModelsEnabled && realModels.size === 0) {
+    realModelsLoading = true;
+    setStatus("Chargement des modeles OBJ...");
+    try {
+      await loadRealModels();
+      setStatus("Modeles OBJ charges.");
+    } catch (error) {
+      realModelsEnabled = false;
+      setStatus("Impossible de charger les modeles OBJ. Pieces stylisees conservees.", true);
+    } finally {
+      realModelsLoading = false;
+    }
+  }
+
+  toggleModelsButton.disabled = false;
+  showTimelinePosition(currentMoveIndex);
 });
 
 document.querySelector("#resetCamera").addEventListener("click", () => {
@@ -464,6 +492,10 @@ function playToneSequence(notes) {
 }
 
 function createPiece(piece) {
+  if (realModelsEnabled && !realModelsLoading && realModels.has(piece.type)) {
+    return createRealPiece(piece);
+  }
+
   const group = new THREE.Group();
   const material = piece.color === "w" ? whiteMat : blackMat;
   const trim = piece.color === "w" ? goldMat : edgeMat;
@@ -526,6 +558,69 @@ function createPiece(piece) {
 
   group.traverse((child) => {
     if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  return group;
+}
+
+async function loadRealModels() {
+  const loader = new OBJLoader();
+  const modelFiles = {
+    p: "Pawn V1.obj",
+    r: "Rook V1.obj",
+    n: "Knight.obj",
+    b: "Bishop V1.obj",
+    q: "Queen V1.obj",
+    k: "King V1.obj"
+  };
+  const heights = {
+    p: 0.74,
+    r: 0.86,
+    n: 0.94,
+    b: 1.02,
+    q: 1.12,
+    k: 1.2
+  };
+
+  for (const [type, file] of Object.entries(modelFiles)) {
+    const url = `assets/models/chess-obj/OBJ%20Files/${file.replaceAll(" ", "%20")}`;
+    const object = await loader.loadAsync(url);
+    normalizeModel(object, heights[type]);
+    realModels.set(type, object);
+  }
+}
+
+function normalizeModel(object, targetHeight) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+
+  object.position.x -= center.x;
+  object.position.z -= center.z;
+  object.position.y -= box.min.y;
+  object.scale.setScalar(targetHeight / Math.max(size.y, 0.001));
+
+  object.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+}
+
+function createRealPiece(piece) {
+  const source = realModels.get(piece.type);
+  const group = source.clone(true);
+  const material = piece.color === "w" ? whiteMat : blackMat;
+
+  group.traverse((child) => {
+    if (child.isMesh) {
+      child.material = material;
       child.castShadow = true;
       child.receiveShadow = true;
     }

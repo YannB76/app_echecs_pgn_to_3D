@@ -17,3 +17,13 @@ http://127.0.0.1:4180/
 ```
 
 Ouvrir `index.html` directement peut empecher le chargement de Three.js et chess.js, car le navigateur applique des restrictions aux modules JavaScript depuis `file://`.
+
+## Modeles OBJ optionnels
+
+Le bouton `Pieces 3D` charge des modeles OBJ locaux si le dossier suivant existe :
+
+```text
+assets/models/chess-obj/OBJ Files/
+```
+
+Les OBJ CGTrader extraits sont volontairement ignores par Git, car ils pesent plusieurs centaines de Mo. Pour une version publique fluide sur GitHub Pages, il faudra convertir ces modeles en `.glb` optimises avant de les ajouter au depot.

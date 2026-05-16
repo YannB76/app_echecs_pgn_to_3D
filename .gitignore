@@ -4,3 +4,5 @@ Thumbs.db
 node_modules/
 dist/
 .env
+uploads_files_*.rar
+assets/models/chess-obj/
