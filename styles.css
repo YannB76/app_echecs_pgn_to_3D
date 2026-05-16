@@ -1,0 +1,269 @@
+:root {
+  color-scheme: dark;
+  --bg: #15181b;
+  --panel: #20252a;
+  --panel-strong: #2a3036;
+  --line: #3d454d;
+  --text: #f3f0e8;
+  --muted: #b3b7bb;
+  --accent: #d7a94b;
+  --accent-strong: #f1c96b;
+  --danger: #ff8a80;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 80% 20%, #2c343a 0, #15181b 38rem);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+textarea,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  min-height: 100vh;
+}
+
+.workspace {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.topbar {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  pointer-events: none;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.4vw, 2.55rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.topbar p {
+  margin: .45rem 0 0;
+  color: var(--muted);
+}
+
+.view-actions {
+  display: flex;
+  gap: .5rem;
+  pointer-events: auto;
+}
+
+button {
+  border: 1px solid color-mix(in srgb, var(--line), white 8%);
+  border-radius: 7px;
+  background: var(--panel-strong);
+  color: var(--text);
+  min-height: 2.55rem;
+  padding: 0 .9rem;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+button:disabled,
+button:disabled:hover {
+  border-color: var(--line);
+  color: color-mix(in srgb, var(--muted), black 25%);
+  cursor: not-allowed;
+  opacity: .58;
+}
+
+#renderPosition {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #191814;
+  font-weight: 700;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100vh;
+}
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--panel), black 10%);
+  border-left: 1px solid var(--line);
+}
+
+.panel-section {
+  display: grid;
+  gap: .7rem;
+}
+
+label,
+.metric-label {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+textarea,
+input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #111417;
+  color: var(--text);
+}
+
+textarea {
+  min-height: 24rem;
+  resize: vertical;
+  padding: .85rem;
+  line-height: 1.45;
+  white-space: pre;
+}
+
+input {
+  min-height: 2.7rem;
+  padding: 0 .75rem;
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
+  min-height: 1.6rem;
+  padding: 0;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .6rem;
+}
+
+.move-player {
+  display: grid;
+  gap: .65rem;
+  padding: .75rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+}
+
+.move-controls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .45rem;
+}
+
+.move-controls button {
+  min-width: 0;
+  padding: 0 .45rem;
+}
+
+#moveLabel {
+  min-height: 1.25rem;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#status {
+  min-height: 1.35rem;
+  margin: 0;
+  color: var(--muted);
+}
+
+#status.error {
+  color: var(--danger);
+}
+
+.compact {
+  grid-template-columns: repeat(3, 1fr);
+  gap: .7rem;
+}
+
+.compact > div {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+  padding: .8rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+}
+
+.compact strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  #scene {
+    height: 62vh;
+  }
+
+  .control-panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  textarea {
+    min-height: 16rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    position: static;
+    background: var(--bg);
+  }
+
+  .workspace {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #scene {
+    height: 52vh;
+  }
+
+  .view-actions,
+  .button-row,
+  .compact {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+}

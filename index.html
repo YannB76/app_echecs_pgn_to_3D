@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PGN vers rendu 3D</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/",
+          "chess.js": "https://cdn.jsdelivr.net/npm/chess.js@1.0.0/dist/esm/chess.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="Rendu 3D">
+        <div class="topbar">
+          <div>
+            <h1>PGN vers rendu 3D</h1>
+            <p id="positionLabel">Position initiale</p>
+          </div>
+          <div class="view-actions" aria-label="Actions de vue">
+            <button id="toggleSound" type="button" title="Activer ou couper les sons" aria-pressed="true">Son</button>
+            <button id="flipBoard" type="button" title="Retourner l'echiquier">Retourner</button>
+            <button id="resetCamera" type="button" title="Recentrer la camera">Camera</button>
+          </div>
+        </div>
+        <canvas id="scene" aria-label="Echiquier 3D"></canvas>
+      </section>
+
+      <aside class="control-panel" aria-label="Controle de position">
+        <div class="panel-section">
+          <label for="pgnInput">PGN ou FEN</label>
+          <textarea id="pgnInput" spellcheck="false">[Event "Immortal Game"]
+[Site "London ENG"]
+[Date "1851.06.21"]
+[Round "?"]
+[White "Adolf Anderssen"]
+[Black "Lionel Kieseritzky"]
+[Result "1-0"]
+
+1. e4 e5 2. f4 exf4 3. Bc4 Qh4+ 4. Kf1 b5 5. Bxb5 Nf6
+6. Nf3 Qh6 7. d3 Nh5 8. Nh4 Qg5 9. Nf5 c6 10. g4 Nf6
+11. Rg1 cxb5 12. h4 Qg6 13. h5 Qg5 14. Qf3 Ng8 15. Bxf4 Qf6
+16. Nc3 Bc5 17. Nd5 Qxb2 18. Bd6 Bxg1 19. e5 Qxa1+ 20. Ke2 Na6
+21. Nxg7+ Kd8 22. Qf6+ Nxf6 23. Be7# 1-0</textarea>
+          <div class="button-row">
+            <button id="renderPosition" type="button">Generer le rendu</button>
+            <button id="loadStart" type="button">Depart</button>
+          </div>
+          <div class="move-player" aria-label="Navigation dans les coups">
+            <div class="move-controls">
+              <button id="firstMove" type="button" title="Position initiale">|&lt;</button>
+              <button id="previousMove" type="button" title="Coup precedent">&lt;</button>
+              <button id="nextMove" type="button" title="Coup suivant">&gt;</button>
+              <button id="lastMove" type="button" title="Derniere position">&gt;|</button>
+            </div>
+            <input id="moveSlider" type="range" min="0" max="0" value="0" />
+            <output id="moveLabel" for="moveSlider">Depart</output>
+          </div>
+          <p id="status" role="status">Pret.</p>
+        </div>
+
+        <div class="panel-section">
+          <label for="fenOutput">FEN finale</label>
+          <input id="fenOutput" readonly value="" />
+        </div>
+
+        <div class="panel-section compact">
+          <div>
+            <span class="metric-label">Trait</span>
+            <strong id="turnMetric">Blancs</strong>
+          </div>
+          <div>
+            <span class="metric-label">Coups joues</span>
+            <strong id="moveMetric">0</strong>
+          </div>
+          <div>
+            <span class="metric-label">Pieces</span>
+            <strong id="pieceMetric">32</strong>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
