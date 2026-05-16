@@ -616,7 +616,11 @@ function normalizeModel(object, targetHeight) {
 function createRealPiece(piece) {
   const source = realModels.get(piece.type);
   const group = source.clone(true);
-  const material = piece.color === "w" ? whiteMat : blackMat;
+  const material = (piece.color === "w" ? whiteMat : blackMat).clone();
+  material.transparent = false;
+  material.opacity = 1;
+  material.depthWrite = true;
+  material.side = THREE.DoubleSide;
 
   group.traverse((child) => {
     if (child.isMesh) {
