@@ -29,6 +29,7 @@ const shadowIntensityLabel = document.querySelector("#shadowIntensityLabel");
 const moveAnimationsEnabledInput = document.querySelector("#moveAnimationsEnabled");
 const animationSpeedInput = document.querySelector("#animationSpeed");
 const animationSpeedLabel = document.querySelector("#animationSpeedLabel");
+const randomAnimationSpeedInput = document.querySelector("#randomAnimationSpeed");
 const soundEnabledInput = document.querySelector("#soundEnabled");
 const soundVolumeInput = document.querySelector("#soundVolume");
 const soundVolumeLabel = document.querySelector("#soundVolumeLabel");
@@ -153,6 +154,7 @@ let shadowIntensity = 1;
 let shadowPlane = null;
 let moveAnimationsEnabled = true;
 let animationSpeed = 1;
+let randomAnimationSpeed = false;
 const realModels = new Map();
 
 const scene = new THREE.Scene();
@@ -337,6 +339,10 @@ moveAnimationsEnabledInput.addEventListener("change", () => {
 animationSpeedInput.addEventListener("input", () => {
   animationSpeed = Number(animationSpeedInput.value) / 100;
   animationSpeedLabel.value = `${animationSpeedInput.value}%`;
+});
+
+randomAnimationSpeedInput.addEventListener("change", () => {
+  randomAnimationSpeed = randomAnimationSpeedInput.checked;
 });
 
 window.addEventListener("resize", resize);
@@ -607,10 +613,16 @@ function animateTimelineStep(fromEntry, toEntry, isForward) {
     start,
     end,
     startTime: performance.now(),
-    duration: (move.flags.includes("n") ? 380 : 520) / animationSpeed,
+    duration: getMoveAnimationDuration(move),
     finalFen: toEntry.fen,
     finalMoveCount: currentMoveIndex
   };
+}
+
+function getMoveAnimationDuration(move) {
+  const baseDuration = move.flags.includes("n") ? 380 : 520;
+  const randomRatio = randomAnimationSpeed ? 0.65 + Math.random() * 0.7 : 1;
+  return baseDuration / (animationSpeed * randomRatio);
 }
 
 function updateActiveAnimation() {
