@@ -14,6 +14,11 @@ const moveMetric = document.querySelector("#moveMetric");
 const pieceMetric = document.querySelector("#pieceMetric");
 const moveSlider = document.querySelector("#moveSlider");
 const moveLabel = document.querySelector("#moveLabel");
+const openOptionsButton = document.querySelector("#openOptions");
+const closeOptionsButton = document.querySelector("#closeOptions");
+const optionsOverlay = document.querySelector("#optionsOverlay");
+const optionTabs = document.querySelectorAll(".option-tab");
+const optionPanels = document.querySelectorAll("[data-panel]");
 const firstMoveButton = document.querySelector("#firstMove");
 const previousMoveButton = document.querySelector("#previousMove");
 const nextMoveButton = document.querySelector("#nextMove");
@@ -290,6 +295,23 @@ nextMoveButton.addEventListener("click", () => showTimelinePosition(currentMoveI
 lastMoveButton.addEventListener("click", () => showTimelinePosition(timeline.length - 1));
 moveSlider.addEventListener("input", () => showTimelinePosition(Number(moveSlider.value)));
 
+openOptionsButton.addEventListener("click", () => {
+  optionsOverlay.hidden = false;
+  closeOptionsButton.focus();
+});
+
+closeOptionsButton.addEventListener("click", closeOptions);
+
+optionsOverlay.addEventListener("click", (event) => {
+  if (event.target === optionsOverlay) {
+    closeOptions();
+  }
+});
+
+optionTabs.forEach((tab) => {
+  tab.addEventListener("click", () => activateOptionTab(tab.dataset.tab));
+});
+
 document.querySelector("#flipBoard").addEventListener("click", () => {
   flipped = !flipped;
   boardGroup.rotation.y = flipped ? Math.PI : 0;
@@ -455,6 +477,11 @@ async function initializeDefaultGame() {
 }
 
 function handleKeyboardNavigation(event) {
+  if (event.key === "Escape" && !optionsOverlay.hidden) {
+    closeOptions();
+    return;
+  }
+
   const tagName = document.activeElement?.tagName;
   if (tagName === "TEXTAREA" || tagName === "INPUT" || tagName === "SELECT") {
     return;
@@ -469,6 +496,20 @@ function handleKeyboardNavigation(event) {
     event.preventDefault();
     showTimelinePosition(currentMoveIndex + 1);
   }
+}
+
+function closeOptions() {
+  optionsOverlay.hidden = true;
+  openOptionsButton.focus();
+}
+
+function activateOptionTab(tabName) {
+  optionTabs.forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.tab === tabName);
+  });
+  optionPanels.forEach((panel) => {
+    panel.classList.toggle("active", panel.dataset.panel === tabName);
+  });
 }
 
 function buildTimeline(chess) {
