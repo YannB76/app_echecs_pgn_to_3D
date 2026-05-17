@@ -5,4 +5,6 @@ node_modules/
 dist/
 .env
 uploads_files_*.rar
+uploads_files_*.zip
 assets/models/chess-obj/
+assets/models/classic-obj/

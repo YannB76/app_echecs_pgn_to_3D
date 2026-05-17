@@ -18,7 +18,7 @@ const firstMoveButton = document.querySelector("#firstMove");
 const previousMoveButton = document.querySelector("#previousMove");
 const nextMoveButton = document.querySelector("#nextMove");
 const lastMoveButton = document.querySelector("#lastMove");
-const toggleModelsButton = document.querySelector("#toggleModels");
+const pieceThemeSelect = document.querySelector("#pieceTheme");
 const backgroundColorInput = document.querySelector("#backgroundColor");
 const pieceScaleInput = document.querySelector("#pieceScale");
 const pieceScaleLabel = document.querySelector("#pieceScaleLabel");
@@ -147,7 +147,6 @@ let soundVolume = 0.75;
 let soundTheme = "wood";
 let audioContext = null;
 let activeAnimation = null;
-let realModelsEnabled = true;
 let realModelsLoading = false;
 let pieceScale = 0.8;
 let shadowIntensity = 1;
@@ -155,7 +154,8 @@ let shadowPlane = null;
 let moveAnimationsEnabled = true;
 let animationSpeed = 1;
 let randomAnimationSpeed = false;
-const realModels = new Map();
+let selectedPieceTheme = "ornate";
+const loadedModelThemes = new Map();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x37a072);
@@ -206,6 +206,48 @@ const soundThemes = {
   wood: { type: "triangle", frequencyRatio: 1, gainRatio: 1, durationRatio: 1 },
   crystal: { type: "sine", frequencyRatio: 1.45, gainRatio: 0.85, durationRatio: 0.82 },
   arcade: { type: "square", frequencyRatio: 0.72, gainRatio: 0.58, durationRatio: 1.15 }
+};
+const pieceModelThemes = {
+  ornate: {
+    label: "OBJ detaille",
+    basePath: "assets/models/chess-obj/OBJ%20Files",
+    files: {
+      p: "Pawn V1.obj",
+      r: "Rook V1.obj",
+      n: "Knight.obj",
+      b: "Bishop V1.obj",
+      q: "Queen V1.obj",
+      k: "King V1.obj"
+    },
+    heights: {
+      p: 1.15,
+      r: 1.34,
+      n: 1.48,
+      b: 1.58,
+      q: 1.74,
+      k: 1.86
+    }
+  },
+  classic: {
+    label: "OBJ classique",
+    basePath: "assets/models/classic-obj",
+    files: {
+      p: "Pawn.obj",
+      r: "Rook.obj",
+      n: "Knight.obj",
+      b: "Bishop.obj",
+      q: "Queen.obj",
+      k: "King.obj"
+    },
+    heights: {
+      p: 1.15,
+      r: 1.34,
+      n: 1.48,
+      b: 1.58,
+      q: 1.74,
+      k: 1.86
+    }
+  }
 };
 
 buildBoard();
@@ -273,29 +315,6 @@ soundThemeSelect.addEventListener("change", () => {
   playSoundEffect("preview");
 });
 
-toggleModelsButton.addEventListener("click", async () => {
-  realModelsEnabled = !realModelsEnabled;
-  toggleModelsButton.textContent = realModelsEnabled ? "Style code" : "Pieces 3D";
-  toggleModelsButton.disabled = true;
-
-  if (realModelsEnabled && realModels.size === 0) {
-    realModelsLoading = true;
-    setStatus("Chargement des modeles OBJ...");
-    try {
-      await loadRealModels();
-      setStatus("Modeles OBJ charges.");
-    } catch (error) {
-      realModelsEnabled = false;
-      setStatus("Impossible de charger les modeles OBJ. Pieces stylisees conservees.", true);
-    } finally {
-      realModelsLoading = false;
-    }
-  }
-
-  toggleModelsButton.disabled = false;
-  showTimelinePosition(currentMoveIndex);
-});
-
 document.querySelector("#resetCamera").addEventListener("click", () => {
   camera.position.set(0, 6.4, -8.4);
   controls.target.set(0, 0, 0);
@@ -310,6 +329,33 @@ pieceScaleInput.addEventListener("input", () => {
   pieceScale = Number(pieceScaleInput.value) / 100;
   pieceScaleLabel.value = `${pieceScaleInput.value}%`;
   renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
+});
+
+pieceThemeSelect.addEventListener("change", async () => {
+  selectedPieceTheme = pieceThemeSelect.value;
+
+  if (selectedPieceTheme === "code") {
+    setStatus("Pieces stylisees chargees.");
+    renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
+    return;
+  }
+
+  realModelsLoading = true;
+  pieceThemeSelect.disabled = true;
+  setStatus(`Chargement du theme ${pieceModelThemes[selectedPieceTheme].label}...`);
+
+  try {
+    await loadPieceTheme(selectedPieceTheme);
+    setStatus(`Theme ${pieceModelThemes[selectedPieceTheme].label} charge.`);
+  } catch (error) {
+    selectedPieceTheme = "code";
+    pieceThemeSelect.value = "code";
+    setStatus("Theme OBJ indisponible. Pieces stylisees chargees.", true);
+  } finally {
+    realModelsLoading = false;
+    pieceThemeSelect.disabled = false;
+    renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
+  }
 });
 
 lightIntensityInput.addEventListener("input", () => {
@@ -392,18 +438,18 @@ function loadSelectedGame(gameId) {
 }
 
 async function initializeDefaultGame() {
-  toggleModelsButton.disabled = true;
-  setStatus("Chargement des modeles OBJ...");
+  pieceThemeSelect.disabled = true;
+  setStatus(`Chargement du theme ${pieceModelThemes[selectedPieceTheme].label}...`);
 
   try {
-    await loadRealModels();
-    setStatus("Modeles OBJ charges.");
+    await loadPieceTheme(selectedPieceTheme);
+    setStatus(`Theme ${pieceModelThemes[selectedPieceTheme].label} charge.`);
   } catch (error) {
-    realModelsEnabled = false;
-    toggleModelsButton.textContent = "Pieces 3D";
+    selectedPieceTheme = "code";
+    pieceThemeSelect.value = "code";
     setStatus("Modeles OBJ indisponibles. Pieces stylisees chargees.", true);
   } finally {
-    toggleModelsButton.disabled = false;
+    pieceThemeSelect.disabled = false;
     loadSelectedGame("immortal");
   }
 }
@@ -761,7 +807,8 @@ function playToneSequence(notes) {
 }
 
 function createPiece(piece) {
-  if (realModelsEnabled && !realModelsLoading && realModels.has(piece.type)) {
+  const realModels = loadedModelThemes.get(selectedPieceTheme);
+  if (selectedPieceTheme !== "code" && !realModelsLoading && realModels?.has(piece.type)) {
     const group = createRealPiece(piece);
     group.scale.multiplyScalar(pieceScale);
     return group;
@@ -838,31 +885,25 @@ function createPiece(piece) {
   return group;
 }
 
-async function loadRealModels() {
-  const loader = new OBJLoader();
-  const modelFiles = {
-    p: "Pawn V1.obj",
-    r: "Rook V1.obj",
-    n: "Knight.obj",
-    b: "Bishop V1.obj",
-    q: "Queen V1.obj",
-    k: "King V1.obj"
-  };
-  const heights = {
-    p: 1.15,
-    r: 1.34,
-    n: 1.48,
-    b: 1.58,
-    q: 1.74,
-    k: 1.86
-  };
+async function loadPieceTheme(themeId) {
+  if (themeId === "code" || loadedModelThemes.has(themeId)) return;
 
-  for (const [type, file] of Object.entries(modelFiles)) {
-    const url = `assets/models/chess-obj/OBJ%20Files/${file.replaceAll(" ", "%20")}`;
+  const theme = pieceModelThemes[themeId];
+  if (!theme) {
+    throw new Error(`Theme inconnu: ${themeId}`);
+  }
+
+  const loader = new OBJLoader();
+  const realModels = new Map();
+
+  for (const [type, file] of Object.entries(theme.files)) {
+    const url = `${theme.basePath}/${file.replaceAll(" ", "%20")}`;
     const object = await loader.loadAsync(url);
-    normalizeModel(object, heights[type]);
+    normalizeModel(object, theme.heights[type]);
     realModels.set(type, object);
   }
+
+  loadedModelThemes.set(themeId, realModels);
 }
 
 function normalizeModel(object, targetHeight) {
@@ -886,7 +927,7 @@ function normalizeModel(object, targetHeight) {
 }
 
 function createRealPiece(piece) {
-  const source = realModels.get(piece.type);
+  const source = loadedModelThemes.get(selectedPieceTheme).get(piece.type);
   const group = source.clone(true);
   const material = (piece.color === "w" ? whiteMat : blackMat).clone();
   material.transparent = false;

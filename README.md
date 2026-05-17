@@ -26,4 +26,10 @@ Le bouton `Pieces 3D` charge des modeles OBJ locaux si le dossier suivant existe
 assets/models/chess-obj/OBJ Files/
 ```
 
+Le menu `Options > Themes > Pieces` peut aussi charger un second set local si ce dossier existe :
+
+```text
+assets/models/classic-obj/
+```
+
 Les OBJ CGTrader extraits sont volontairement ignores par Git, car ils pesent plusieurs centaines de Mo. Pour une version publique fluide sur GitHub Pages, il faudra convertir ces modeles en `.glb` optimises avant de les ajouter au depot.

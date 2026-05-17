@@ -24,7 +24,6 @@
             <p id="positionLabel">Position initiale</p>
           </div>
           <div class="view-actions" aria-label="Actions de vue">
-            <button id="toggleModels" type="button" title="Basculer entre pieces stylisees et modeles OBJ">Style code</button>
             <button id="flipBoard" type="button" title="Retourner l'echiquier">Retourner</button>
             <button id="resetCamera" type="button" title="Recentrer la camera">Camera</button>
           </div>
@@ -73,6 +72,18 @@
 
         <details class="panel-section options-panel" open>
           <summary>Options</summary>
+
+          <section class="option-group" aria-label="Options de themes">
+            <h2>Themes</h2>
+            <label class="select-row">
+              <span>Pieces</span>
+              <select id="pieceTheme">
+                <option value="ornate">OBJ detaille</option>
+                <option value="classic">OBJ classique</option>
+                <option value="code">Style code</option>
+              </select>
+            </label>
+          </section>
 
           <section class="option-group" aria-label="Options d'affichage">
             <h2>Affichage</h2>
