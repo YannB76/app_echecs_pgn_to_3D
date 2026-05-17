@@ -17,11 +17,14 @@ const firstMoveButton = document.querySelector("#firstMove");
 const previousMoveButton = document.querySelector("#previousMove");
 const nextMoveButton = document.querySelector("#nextMove");
 const lastMoveButton = document.querySelector("#lastMove");
-const toggleSoundButton = document.querySelector("#toggleSound");
 const toggleModelsButton = document.querySelector("#toggleModels");
 const backgroundColorInput = document.querySelector("#backgroundColor");
 const pieceScaleInput = document.querySelector("#pieceScale");
 const pieceScaleLabel = document.querySelector("#pieceScaleLabel");
+const soundEnabledInput = document.querySelector("#soundEnabled");
+const soundVolumeInput = document.querySelector("#soundVolume");
+const soundVolumeLabel = document.querySelector("#soundVolumeLabel");
+const soundThemeSelect = document.querySelector("#soundTheme");
 
 const squareSize = 1;
 const boardOffset = 3.5;
@@ -32,6 +35,8 @@ let lastMoveCount = 0;
 let timeline = [{ fen: lastFen, label: "Depart" }];
 let currentMoveIndex = 0;
 let soundEnabled = true;
+let soundVolume = 0.75;
+let soundTheme = "wood";
 let audioContext = null;
 let activeAnimation = null;
 let realModelsEnabled = false;
@@ -79,6 +84,11 @@ const edgeMat = new THREE.MeshStandardMaterial({ color: 0x2a2119, roughness: 0.7
 const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf1efe7, roughness: 0.55, metalness: 0.08 });
 const blackMat = new THREE.MeshStandardMaterial({ color: 0x24282d, roughness: 0.5, metalness: 0.16 });
 const goldMat = new THREE.MeshStandardMaterial({ color: 0xd7a94b, roughness: 0.44, metalness: 0.22 });
+const soundThemes = {
+  wood: { type: "triangle", frequencyRatio: 1, gainRatio: 1, durationRatio: 1 },
+  crystal: { type: "sine", frequencyRatio: 1.45, gainRatio: 0.85, durationRatio: 0.82 },
+  arcade: { type: "square", frequencyRatio: 0.72, gainRatio: 0.58, durationRatio: 1.15 }
+};
 
 buildBoard();
 showTimelinePosition(0);
@@ -121,13 +131,23 @@ document.querySelector("#flipBoard").addEventListener("click", () => {
   pieceMeshes.rotation.y = flipped ? Math.PI : 0;
 });
 
-toggleSoundButton.addEventListener("click", () => {
-  soundEnabled = !soundEnabled;
-  toggleSoundButton.setAttribute("aria-pressed", String(soundEnabled));
-  toggleSoundButton.textContent = soundEnabled ? "Son" : "Muet";
+soundEnabledInput.addEventListener("change", () => {
+  soundEnabled = soundEnabledInput.checked;
   if (soundEnabled) {
-    playToneSequence([{ frequency: 660, duration: 0.06, gain: 0.035 }]);
+    playSoundEffect("preview");
   }
+});
+
+soundVolumeInput.addEventListener("input", () => {
+  soundVolume = Number(soundVolumeInput.value) / 100;
+  soundVolumeLabel.value = `${soundVolumeInput.value}%`;
+});
+
+soundVolumeInput.addEventListener("change", () => playSoundEffect("preview"));
+
+soundThemeSelect.addEventListener("change", () => {
+  soundTheme = soundThemeSelect.value;
+  playSoundEffect("preview");
 });
 
 toggleModelsButton.addEventListener("click", async () => {
@@ -195,7 +215,7 @@ function sourceLooksLikeFen(source) {
 
 function handleKeyboardNavigation(event) {
   const tagName = document.activeElement?.tagName;
-  if (tagName === "TEXTAREA" || tagName === "INPUT") {
+  if (tagName === "TEXTAREA" || tagName === "INPUT" || tagName === "SELECT") {
     return;
   }
 
@@ -466,34 +486,46 @@ function playMoveSound(entry, previousMoveIndex) {
 
   const chess = new Chess(entry.fen);
   if (chess.isCheckmate()) {
-    playToneSequence([
-      { frequency: 740, duration: 0.08, gain: 0.045 },
-      { frequency: 520, duration: 0.12, gain: 0.04, delay: 0.08 },
-      { frequency: 880, duration: 0.16, gain: 0.035, delay: 0.2 }
-    ]);
+    playSoundEffect("mate");
     return;
   }
 
   if (chess.isCheck()) {
-    playToneSequence([
-      { frequency: 880, duration: 0.07, gain: 0.04 },
-      { frequency: 660, duration: 0.08, gain: 0.035, delay: 0.08 }
-    ]);
+    playSoundEffect("check");
     return;
   }
 
   if (entry.move.captured) {
-    playToneSequence([
-      { frequency: 240, duration: 0.05, gain: 0.045 },
-      { frequency: 170, duration: 0.09, gain: 0.035, delay: 0.05 }
-    ]);
+    playSoundEffect("capture");
     return;
   }
 
-  playToneSequence([
-    { frequency: 520, duration: 0.045, gain: 0.032 },
-    { frequency: 390, duration: 0.045, gain: 0.026, delay: 0.045 }
-  ]);
+  playSoundEffect("move");
+}
+
+function playSoundEffect(effect) {
+  const patterns = {
+    preview: [{ frequency: 660, duration: 0.06, gain: 0.035 }],
+    move: [
+      { frequency: 520, duration: 0.045, gain: 0.032 },
+      { frequency: 390, duration: 0.045, gain: 0.026, delay: 0.045 }
+    ],
+    capture: [
+      { frequency: 240, duration: 0.05, gain: 0.045 },
+      { frequency: 170, duration: 0.09, gain: 0.035, delay: 0.05 }
+    ],
+    check: [
+      { frequency: 880, duration: 0.07, gain: 0.04 },
+      { frequency: 660, duration: 0.08, gain: 0.035, delay: 0.08 }
+    ],
+    mate: [
+      { frequency: 740, duration: 0.08, gain: 0.045 },
+      { frequency: 520, duration: 0.12, gain: 0.04, delay: 0.08 },
+      { frequency: 880, duration: 0.16, gain: 0.035, delay: 0.2 }
+    ]
+  };
+
+  playToneSequence(patterns[effect] ?? patterns.move);
 }
 
 function playToneSequence(notes) {
@@ -505,21 +537,24 @@ function playToneSequence(notes) {
   }
 
   const now = audioContext.currentTime;
+  const theme = soundThemes[soundTheme] ?? soundThemes.wood;
   notes.forEach((note) => {
     const start = now + (note.delay ?? 0);
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
+    const duration = note.duration * theme.durationRatio;
+    const targetGain = note.gain * soundVolume * theme.gainRatio;
 
-    oscillator.type = "triangle";
-    oscillator.frequency.setValueAtTime(note.frequency, start);
+    oscillator.type = theme.type;
+    oscillator.frequency.setValueAtTime(note.frequency * theme.frequencyRatio, start);
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(note.gain, start + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, targetGain), start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 
     oscillator.connect(gain);
     gain.connect(audioContext.destination);
     oscillator.start(start);
-    oscillator.stop(start + note.duration + 0.02);
+    oscillator.stop(start + duration + 0.02);
   });
 }
 

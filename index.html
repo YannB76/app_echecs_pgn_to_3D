@@ -24,7 +24,6 @@
             <p id="positionLabel">Position initiale</p>
           </div>
           <div class="view-actions" aria-label="Actions de vue">
-            <button id="toggleSound" type="button" title="Activer ou couper les sons" aria-pressed="true">Son</button>
             <button id="toggleModels" type="button" title="Basculer entre pieces stylisees et modeles OBJ">Pieces 3D</button>
             <button id="flipBoard" type="button" title="Retourner l'echiquier">Retourner</button>
             <button id="resetCamera" type="button" title="Recentrer la camera">Camera</button>
@@ -71,18 +70,43 @@
           <input id="fenOutput" readonly value="" />
         </div>
 
-        <div class="panel-section display-panel">
-          <label>Affichage</label>
-          <div class="setting-row">
-            <span>Arriere-plan</span>
-            <input id="backgroundColor" type="color" value="#37a072" aria-label="Couleur de l'arriere-plan" />
-          </div>
-          <div class="setting-row slider-setting">
-            <span>Taille pieces</span>
-            <input id="pieceScale" type="range" min="70" max="170" value="80" aria-label="Taille des pieces" />
-            <output id="pieceScaleLabel" for="pieceScale">80%</output>
-          </div>
-        </div>
+        <details class="panel-section options-panel" open>
+          <summary>Options</summary>
+
+          <section class="option-group" aria-label="Options d'affichage">
+            <h2>Affichage</h2>
+            <div class="setting-row">
+              <span>Arriere-plan</span>
+              <input id="backgroundColor" type="color" value="#37a072" aria-label="Couleur de l'arriere-plan" />
+            </div>
+            <div class="setting-row slider-setting">
+              <span>Taille pieces</span>
+              <input id="pieceScale" type="range" min="70" max="170" value="80" aria-label="Taille des pieces" />
+              <output id="pieceScaleLabel" for="pieceScale">80%</output>
+            </div>
+          </section>
+
+          <section class="option-group" aria-label="Options audio">
+            <h2>Audio</h2>
+            <label class="toggle-row">
+              <span>Son active</span>
+              <input id="soundEnabled" type="checkbox" checked />
+            </label>
+            <div class="setting-row slider-setting">
+              <span>Volume</span>
+              <input id="soundVolume" type="range" min="0" max="100" value="75" aria-label="Volume des sons" />
+              <output id="soundVolumeLabel" for="soundVolume">75%</output>
+            </div>
+            <label class="select-row">
+              <span>Theme sonore</span>
+              <select id="soundTheme">
+                <option value="wood">Bois</option>
+                <option value="crystal">Cristal</option>
+                <option value="arcade">Arcade</option>
+              </select>
+            </label>
+          </section>
+        </details>
 
         <div class="panel-section compact">
           <div>
