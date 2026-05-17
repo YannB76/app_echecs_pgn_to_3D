@@ -26,6 +26,7 @@ const lightIntensityInput = document.querySelector("#lightIntensity");
 const lightIntensityLabel = document.querySelector("#lightIntensityLabel");
 const shadowIntensityInput = document.querySelector("#shadowIntensity");
 const shadowIntensityLabel = document.querySelector("#shadowIntensityLabel");
+const moveAnimationsEnabledInput = document.querySelector("#moveAnimationsEnabled");
 const soundEnabledInput = document.querySelector("#soundEnabled");
 const soundVolumeInput = document.querySelector("#soundVolume");
 const soundVolumeLabel = document.querySelector("#soundVolumeLabel");
@@ -148,6 +149,7 @@ let realModelsLoading = false;
 let pieceScale = 0.8;
 let shadowIntensity = 1;
 let shadowPlane = null;
+let moveAnimationsEnabled = true;
 const realModels = new Map();
 
 const scene = new THREE.Scene();
@@ -322,6 +324,11 @@ shadowIntensityInput.addEventListener("input", () => {
     shadowPlane.visible = shadowIntensity > 0;
   }
   renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
+});
+
+moveAnimationsEnabledInput.addEventListener("change", () => {
+  moveAnimationsEnabled = moveAnimationsEnabledInput.checked;
+  activeAnimation = null;
 });
 
 window.addEventListener("resize", resize);
@@ -520,7 +527,7 @@ function showTimelinePosition(index) {
   currentMoveIndex = safeIndex;
   lastFen = entry.fen;
   lastMoveCount = safeIndex;
-  if (Math.abs(safeIndex - previousMoveIndex) === 1 && entry.move) {
+  if (moveAnimationsEnabled && Math.abs(safeIndex - previousMoveIndex) === 1 && entry.move) {
     animateTimelineStep(previousEntry, entry, safeIndex > previousMoveIndex);
   } else {
     renderFen(entry.fen, { moveCount: safeIndex });
