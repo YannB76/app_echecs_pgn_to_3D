@@ -40,7 +40,7 @@ let pieceScale = 0.8;
 const realModels = new Map();
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x15181b);
+scene.background = new THREE.Color(0x37a072);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
 camera.position.set(0, 6.4, -8.4);
@@ -170,6 +170,7 @@ pieceScaleInput.addEventListener("input", () => {
 });
 
 window.addEventListener("resize", resize);
+window.addEventListener("keydown", handleKeyboardNavigation);
 
 function timelineFromText(source) {
   if (!source) {
@@ -190,6 +191,23 @@ function timelineFromText(source) {
 function sourceLooksLikeFen(source) {
   const firstLine = source.split(/\n/).find(Boolean) || "";
   return firstLine.split(/\s+/).length >= 4 && /^[prnbqkPRNBQK1-8/]+$/.test(firstLine.split(/\s+/)[0]);
+}
+
+function handleKeyboardNavigation(event) {
+  const tagName = document.activeElement?.tagName;
+  if (tagName === "TEXTAREA" || tagName === "INPUT") {
+    return;
+  }
+
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    showTimelinePosition(currentMoveIndex - 1);
+  }
+
+  if (event.key === "ArrowRight") {
+    event.preventDefault();
+    showTimelinePosition(currentMoveIndex + 1);
+  }
 }
 
 function buildTimeline(chess) {
