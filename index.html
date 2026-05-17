@@ -71,6 +71,19 @@
           <input id="fenOutput" readonly value="" />
         </div>
 
+        <div class="panel-section display-panel">
+          <label>Affichage</label>
+          <div class="setting-row">
+            <span>Arriere-plan</span>
+            <input id="backgroundColor" type="color" value="#15181b" aria-label="Couleur de l'arriere-plan" />
+          </div>
+          <div class="setting-row slider-setting">
+            <span>Taille pieces</span>
+            <input id="pieceScale" type="range" min="70" max="170" value="100" aria-label="Taille des pieces" />
+            <output id="pieceScaleLabel" for="pieceScale">100%</output>
+          </div>
+        </div>
+
         <div class="panel-section compact">
           <div>
             <span class="metric-label">Trait</span>

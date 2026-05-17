@@ -19,6 +19,9 @@ const nextMoveButton = document.querySelector("#nextMove");
 const lastMoveButton = document.querySelector("#lastMove");
 const toggleSoundButton = document.querySelector("#toggleSound");
 const toggleModelsButton = document.querySelector("#toggleModels");
+const backgroundColorInput = document.querySelector("#backgroundColor");
+const pieceScaleInput = document.querySelector("#pieceScale");
+const pieceScaleLabel = document.querySelector("#pieceScaleLabel");
 
 const squareSize = 1;
 const boardOffset = 3.5;
@@ -33,6 +36,7 @@ let audioContext = null;
 let activeAnimation = null;
 let realModelsEnabled = false;
 let realModelsLoading = false;
+let pieceScale = 1;
 const realModels = new Map();
 
 const scene = new THREE.Scene();
@@ -153,6 +157,16 @@ document.querySelector("#resetCamera").addEventListener("click", () => {
   camera.position.set(0, 6.4, -8.4);
   controls.target.set(0, 0, 0);
   controls.update();
+});
+
+backgroundColorInput.addEventListener("input", () => {
+  scene.background.set(backgroundColorInput.value);
+});
+
+pieceScaleInput.addEventListener("input", () => {
+  pieceScale = Number(pieceScaleInput.value) / 100;
+  pieceScaleLabel.value = `${pieceScaleInput.value}%`;
+  renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
 });
 
 window.addEventListener("resize", resize);
@@ -493,7 +507,9 @@ function playToneSequence(notes) {
 
 function createPiece(piece) {
   if (realModelsEnabled && !realModelsLoading && realModels.has(piece.type)) {
-    return createRealPiece(piece);
+    const group = createRealPiece(piece);
+    group.scale.multiplyScalar(pieceScale);
+    return group;
   }
 
   const group = new THREE.Group();
@@ -563,6 +579,7 @@ function createPiece(piece) {
     }
   });
 
+  group.scale.setScalar(pieceScale);
   return group;
 }
 
