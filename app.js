@@ -22,6 +22,10 @@ const toggleModelsButton = document.querySelector("#toggleModels");
 const backgroundColorInput = document.querySelector("#backgroundColor");
 const pieceScaleInput = document.querySelector("#pieceScale");
 const pieceScaleLabel = document.querySelector("#pieceScaleLabel");
+const lightIntensityInput = document.querySelector("#lightIntensity");
+const lightIntensityLabel = document.querySelector("#lightIntensityLabel");
+const shadowIntensityInput = document.querySelector("#shadowIntensity");
+const shadowIntensityLabel = document.querySelector("#shadowIntensityLabel");
 const soundEnabledInput = document.querySelector("#soundEnabled");
 const soundVolumeInput = document.querySelector("#soundVolume");
 const soundVolumeLabel = document.querySelector("#soundVolumeLabel");
@@ -142,6 +146,8 @@ let activeAnimation = null;
 let realModelsEnabled = false;
 let realModelsLoading = false;
 let pieceScale = 0.8;
+let shadowIntensity = 1;
+let shadowPlane = null;
 const realModels = new Map();
 
 const scene = new THREE.Scene();
@@ -174,6 +180,11 @@ scene.add(keyLight);
 const fillLight = new THREE.DirectionalLight(0x9bbcff, 1.1);
 fillLight.position.set(-7, 5, -4);
 scene.add(fillLight);
+const baseLightIntensities = {
+  ambient: ambient.intensity,
+  key: keyLight.intensity,
+  fill: fillLight.intensity
+};
 
 const boardGroup = new THREE.Group();
 scene.add(boardGroup, pieceMeshes);
@@ -294,6 +305,25 @@ pieceScaleInput.addEventListener("input", () => {
   renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
 });
 
+lightIntensityInput.addEventListener("input", () => {
+  const ratio = Number(lightIntensityInput.value) / 100;
+  ambient.intensity = baseLightIntensities.ambient * ratio;
+  keyLight.intensity = baseLightIntensities.key * ratio;
+  fillLight.intensity = baseLightIntensities.fill * ratio;
+  lightIntensityLabel.value = `${lightIntensityInput.value}%`;
+});
+
+shadowIntensityInput.addEventListener("input", () => {
+  shadowIntensity = Number(shadowIntensityInput.value) / 100;
+  shadowIntensityLabel.value = `${shadowIntensityInput.value}%`;
+  renderer.shadowMap.enabled = shadowIntensity > 0;
+  if (shadowPlane) {
+    shadowPlane.material.opacity = 0.28 * shadowIntensity;
+    shadowPlane.visible = shadowIntensity > 0;
+  }
+  renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
+});
+
 window.addEventListener("resize", resize);
 window.addEventListener("keydown", handleKeyboardNavigation);
 
@@ -399,12 +429,13 @@ function buildBoard() {
 
   const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(36, 36),
-    new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.28 })
+    new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.28 * shadowIntensity })
   );
   plane.rotation.x = -Math.PI / 2;
   plane.position.y = -0.29;
   plane.receiveShadow = true;
   scene.add(plane);
+  shadowPlane = plane;
 }
 
 function addBoardCoordinates() {

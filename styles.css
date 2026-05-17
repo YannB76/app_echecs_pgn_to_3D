@@ -258,6 +258,8 @@ input[type="range"] {
 }
 
 #pieceScaleLabel,
+#lightIntensityLabel,
+#shadowIntensityLabel,
 #soundVolumeLabel {
   color: var(--text);
   text-align: right;

@@ -87,6 +87,20 @@
             </div>
           </section>
 
+          <section class="option-group" aria-label="Options d'eclairage">
+            <h2>Eclairage</h2>
+            <div class="setting-row slider-setting">
+              <span>Lumiere</span>
+              <input id="lightIntensity" type="range" min="40" max="160" value="100" aria-label="Intensite de la lumiere" />
+              <output id="lightIntensityLabel" for="lightIntensity">100%</output>
+            </div>
+            <div class="setting-row slider-setting">
+              <span>Ombres</span>
+              <input id="shadowIntensity" type="range" min="0" max="100" value="100" aria-label="Intensite des ombres" />
+              <output id="shadowIntensityLabel" for="shadowIntensity">100%</output>
+            </div>
+          </section>
+
           <section class="option-group" aria-label="Options audio">
             <h2>Audio</h2>
             <label class="toggle-row">
