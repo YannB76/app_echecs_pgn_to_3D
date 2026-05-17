@@ -4,6 +4,7 @@ import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { Chess } from "chess.js";
 
 const canvas = document.querySelector("#scene");
+const gameLibrary = document.querySelector("#gameLibrary");
 const pgnInput = document.querySelector("#pgnInput");
 const fenOutput = document.querySelector("#fenOutput");
 const statusEl = document.querySelector("#status");
@@ -28,6 +29,105 @@ const soundThemeSelect = document.querySelector("#soundTheme");
 
 const squareSize = 1;
 const boardOffset = 3.5;
+const famousGames = [
+  {
+    id: "immortal",
+    label: "Anderssen - Kieseritzky, 1851 - Immortal Game",
+    pgn: `[Event "Immortal Game"]
+[Site "London ENG"]
+[Date "1851.06.21"]
+[Round "?"]
+[White "Adolf Anderssen"]
+[Black "Lionel Kieseritzky"]
+[Result "1-0"]
+
+1. e4 e5 2. f4 exf4 3. Bc4 Qh4+ 4. Kf1 b5 5. Bxb5 Nf6
+6. Nf3 Qh6 7. d3 Nh5 8. Nh4 Qg5 9. Nf5 c6 10. g4 Nf6
+11. Rg1 cxb5 12. h4 Qg6 13. h5 Qg5 14. Qf3 Ng8 15. Bxf4 Qf6
+16. Nc3 Bc5 17. Nd5 Qxb2 18. Bd6 Bxg1 19. e5 Qxa1+ 20. Ke2 Na6
+21. Nxg7+ Kd8 22. Qf6+ Nxf6 23. Be7# 1-0`
+  },
+  {
+    id: "deep-blue",
+    label: "Deep Blue - Kasparov, 1997 - Match game 6",
+    pgn: `[Event "IBM Man-Machine Match"]
+[Site "New York, NY USA"]
+[Date "1997.05.11"]
+[Round "6"]
+[White "Deep Blue"]
+[Black "Garry Kasparov"]
+[Result "1-0"]
+
+1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Nd7 5. Ng5 Ngf6
+6. Bd3 e6 7. N1f3 h6 8. Nxe6 Qe7 9. O-O fxe6 10. Bg6+ Kd8
+11. Bf4 b5 12. a4 Bb7 13. Re1 Nd5 14. Bg3 Kc8 15. axb5 cxb5
+16. Qd3 Bc6 17. Bf5 exf5 18. Rxe7 Bxe7 19. c4 1-0`
+  },
+  {
+    id: "fischer",
+    label: "Byrne - Fischer, 1956 - Game of the Century",
+    pgn: `[Event "Third Rosenwald Trophy"]
+[Site "New York, NY USA"]
+[Date "1956.10.17"]
+[Round "8"]
+[White "Donald Byrne"]
+[Black "Robert James Fischer"]
+[Result "0-1"]
+
+1. Nf3 Nf6 2. c4 g6 3. Nc3 Bg7 4. d4 O-O 5. Bf4 d5
+6. Qb3 dxc4 7. Qxc4 c6 8. e4 Nbd7 9. Rd1 Nb6 10. Qc5 Bg4
+11. Bg5 Na4 12. Qa3 Nxc3 13. bxc3 Nxe4 14. Bxe7 Qb6
+15. Bc4 Nxc3 16. Bc5 Rfe8+ 17. Kf1 Be6 18. Bxb6 Bxc4+
+19. Kg1 Ne2+ 20. Kf1 Nxd4+ 21. Kg1 Ne2+ 22. Kf1 Nc3+
+23. Kg1 axb6 24. Qb4 Ra4 25. Qxb6 Nxd1 26. h3 Rxa2
+27. Kh2 Nxf2 28. Re1 Rxe1 29. Qd8+ Bf8 30. Nxe1 Bd5
+31. Nf3 Ne4 32. Qb8 b5 33. h4 h5 34. Ne5 Kg7 35. Kg1 Bc5+
+36. Kf1 Ng3+ 37. Ke1 Bb4+ 38. Kd1 Bb3+ 39. Kc1 Ne2+
+40. Kb1 Nc3+ 41. Kc1 Rc2# 0-1`
+  },
+  {
+    id: "capablanca",
+    label: "Capablanca - Tartakower, 1922 - London",
+    pgn: `[Event "London"]
+[Site "London ENG"]
+[Date "1922.08.10"]
+[Round "8"]
+[White "Jose Raul Capablanca"]
+[Black "Savielly Tartakower"]
+[Result "1/2-1/2"]
+
+1. d4 Nf6 2. Nf3 d5 3. c4 e6 4. Nc3 Be7 5. Bg5 O-O 6. e3 h6
+7. Bh4 b6 8. cxd5 exd5 9. Qb3 Be6 10. Rd1 c6 11. Qc2 Ne4
+12. Bxe7 Qxe7 13. Nxe4 dxe4 14. Qxe4 Qb4+ 15. Nd2 Qxb2
+16. Bd3 g6 17. Qf4 Kg7 18. h4 Nd7 19. Ne4 Qxa2 20. h5 g5
+21. Qg3 Qa5+ 22. Ke2 f5 23. Nxg5 hxg5 24. Qxg5+ Kf7
+25. h6 Rg8 26. Qh5+ Ke7 27. h7 Rxg2 28. Kf1 Qd5 29. h8=Q Rxh8
+30. Qxh8 Qf3 31. Rd2 Bd5 32. Ke1 Rg8 33. Qh4+ Kd6 34. Rf1 Be6
+35. Rc2 a5 36. Qh2+ Ke7 37. Be2 Qe4 38. Kd2 c5 39. Bd3 Qg2
+40. Qh4+ Qg5 41. Qxg5+ Rxg5 42. Rb1 f4 1/2-1/2`
+  },
+  {
+    id: "ivanchuk",
+    label: "Ivanchuk - Yusupov, 1991 - Brussels",
+    pgn: `[Event "Brussels Candidates"]
+[Site "Brussels BEL"]
+[Date "1991.08.24"]
+[Round "9"]
+[White "Vasyl Ivanchuk"]
+[Black "Artur Yusupov"]
+[Result "0-1"]
+
+1. c4 e5 2. g3 d6 3. Bg2 g6 4. d4 Nd7 5. Nc3 Bg7 6. Nf3 Ngf6
+7. O-O O-O 8. Qc2 Re8 9. Rd1 c6 10. b3 Qe7 11. Ba3 e4
+12. Ng5 e3 13. f4 Nf8 14. b4 Bf5 15. Qb3 h6 16. Nf3 Ng4
+17. b5 g5 18. bxc6 bxc6 19. Ne5 gxf4 20. Nxc6 Qg5
+21. Bxd6 Ng6 22. Nd5 Qh5 23. h4 Nxh4 24. gxh4 Qxh4
+25. Nde7+ Kh8 26. Nxf5 Qh2+ 27. Kf1 Re6 28. Qb7 Rg6
+29. Qxa8+ Kh7 30. Qg8+ Kxg8 31. Nce7+ Kh7 32. Nxg6 fxg6
+33. Nxg7 Nf2 34. Bxf4 Qxf4 35. Ne6 Qh2 36. Rdb1 Nh3
+37. Rb7+ Kh8 38. Rb8+ Qxb8 39. Bxh3 Qg3 0-1`
+  }
+];
 const pieceMeshes = new THREE.Group();
 let flipped = false;
 let lastFen = new Chess().fen();
@@ -91,11 +191,26 @@ const soundThemes = {
 };
 
 buildBoard();
-showTimelinePosition(0);
+populateGameLibrary();
+loadSelectedGame("immortal");
 resize();
 animate();
 
 document.querySelector("#renderPosition").addEventListener("click", () => {
+  gameLibrary.value = "custom";
+  renderCurrentInput();
+});
+
+gameLibrary.addEventListener("change", () => {
+  if (gameLibrary.value === "custom") return;
+  loadSelectedGame(gameLibrary.value);
+});
+
+pgnInput.addEventListener("input", () => {
+  gameLibrary.value = "custom";
+});
+
+function renderCurrentInput() {
   const source = pgnInput.value.trim();
   try {
     timeline = timelineFromText(source);
@@ -107,17 +222,7 @@ document.querySelector("#renderPosition").addEventListener("click", () => {
   } catch (error) {
     setStatus(error.message || "Impossible de lire cette position.", true);
   }
-});
-
-document.querySelector("#loadStart").addEventListener("click", () => {
-  const chess = new Chess();
-  pgnInput.value = chess.fen();
-  lastFen = chess.fen();
-  lastMoveCount = 0;
-  timeline = [{ fen: lastFen, label: "Depart" }];
-  showTimelinePosition(0);
-  setStatus("Position de depart chargee.");
-});
+}
 
 firstMoveButton.addEventListener("click", () => showTimelinePosition(0));
 previousMoveButton.addEventListener("click", () => showTimelinePosition(currentMoveIndex - 1));
@@ -211,6 +316,28 @@ function timelineFromText(source) {
 function sourceLooksLikeFen(source) {
   const firstLine = source.split(/\n/).find(Boolean) || "";
   return firstLine.split(/\s+/).length >= 4 && /^[prnbqkPRNBQK1-8/]+$/.test(firstLine.split(/\s+/)[0]);
+}
+
+function populateGameLibrary() {
+  gameLibrary.innerHTML = "";
+  famousGames.forEach((game) => {
+    const option = document.createElement("option");
+    option.value = game.id;
+    option.textContent = game.label;
+    gameLibrary.append(option);
+  });
+
+  const customOption = document.createElement("option");
+  customOption.value = "custom";
+  customOption.textContent = "PGN personnalise";
+  gameLibrary.append(customOption);
+}
+
+function loadSelectedGame(gameId) {
+  const game = famousGames.find((entry) => entry.id === gameId) ?? famousGames[0];
+  gameLibrary.value = game.id;
+  pgnInput.value = game.pgn;
+  renderCurrentInput();
 }
 
 function handleKeyboardNavigation(event) {

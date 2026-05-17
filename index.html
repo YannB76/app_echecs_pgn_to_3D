@@ -34,6 +34,8 @@
 
       <aside class="control-panel" aria-label="Controle de position">
         <div class="panel-section">
+          <label for="gameLibrary">Bibliotheque de parties</label>
+          <select id="gameLibrary"></select>
           <label for="pgnInput">PGN ou FEN</label>
           <textarea id="pgnInput" spellcheck="false">[Event "Immortal Game"]
 [Site "London ENG"]
@@ -50,7 +52,6 @@
 21. Nxg7+ Kd8 22. Qf6+ Nxf6 23. Be7# 1-0</textarea>
           <div class="button-row">
             <button id="renderPosition" type="button">Generer le rendu</button>
-            <button id="loadStart" type="button">Depart</button>
           </div>
           <div class="move-player" aria-label="Navigation dans les coups">
             <div class="move-controls">
