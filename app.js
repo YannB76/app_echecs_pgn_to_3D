@@ -144,7 +144,7 @@ let soundVolume = 0.75;
 let soundTheme = "wood";
 let audioContext = null;
 let activeAnimation = null;
-let realModelsEnabled = false;
+let realModelsEnabled = true;
 let realModelsLoading = false;
 let pieceScale = 0.8;
 let shadowIntensity = 1;
@@ -205,7 +205,7 @@ const soundThemes = {
 
 buildBoard();
 populateGameLibrary();
-loadSelectedGame("immortal");
+initializeDefaultGame();
 resize();
 animate();
 
@@ -227,7 +227,7 @@ function renderCurrentInput() {
   const source = pgnInput.value.trim();
   try {
     timeline = timelineFromText(source);
-    currentMoveIndex = timeline.length - 1;
+    currentMoveIndex = 0;
     lastFen = timeline[currentMoveIndex].fen;
     lastMoveCount = currentMoveIndex;
     showTimelinePosition(currentMoveIndex);
@@ -375,6 +375,23 @@ function loadSelectedGame(gameId) {
   gameLibrary.value = game.id;
   pgnInput.value = game.pgn;
   renderCurrentInput();
+}
+
+async function initializeDefaultGame() {
+  toggleModelsButton.disabled = true;
+  setStatus("Chargement des modeles OBJ...");
+
+  try {
+    await loadRealModels();
+    setStatus("Modeles OBJ charges.");
+  } catch (error) {
+    realModelsEnabled = false;
+    toggleModelsButton.textContent = "Pieces 3D";
+    setStatus("Modeles OBJ indisponibles. Pieces stylisees chargees.", true);
+  } finally {
+    toggleModelsButton.disabled = false;
+    loadSelectedGame("immortal");
+  }
 }
 
 function handleKeyboardNavigation(event) {
