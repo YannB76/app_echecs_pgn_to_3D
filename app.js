@@ -36,7 +36,7 @@ let audioContext = null;
 let activeAnimation = null;
 let realModelsEnabled = false;
 let realModelsLoading = false;
-let pieceScale = 1;
+let pieceScale = 0.8;
 const realModels = new Map();
 
 const scene = new THREE.Scene();
