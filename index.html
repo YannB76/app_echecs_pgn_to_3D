@@ -66,6 +66,19 @@
           <p id="status" role="status">Pret.</p>
         </div>
 
+        <div class="panel-section annotation-panel">
+          <label>Commentaire du coup</label>
+          <div class="annotation-current" id="annotationCurrent">Position initiale</div>
+          <div class="annotation-grid" id="annotationChoices" aria-label="Evaluation du coup"></div>
+          <textarea id="moveComment" class="comment-textarea" placeholder="Ajouter un commentaire pour ce coup..."></textarea>
+          <button id="clearComment" type="button">Effacer ce commentaire</button>
+        </div>
+
+        <div class="panel-section">
+          <label for="annotatedPgn">PGN commente</label>
+          <textarea id="annotatedPgn" class="annotated-pgn" readonly></textarea>
+        </div>
+
         <div class="panel-section">
           <label for="fenOutput">FEN finale</label>
           <input id="fenOutput" readonly value="" />

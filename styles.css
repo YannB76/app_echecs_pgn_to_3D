@@ -209,6 +209,60 @@ input[type="range"] {
   white-space: nowrap;
 }
 
+.annotation-panel {
+  padding: .75rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+}
+
+.annotation-current {
+  color: var(--muted);
+}
+
+.annotation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.annotation-choice {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: center;
+  gap: .45rem;
+  min-height: 2.35rem;
+  padding: 0 .55rem;
+  text-align: left;
+}
+
+.annotation-choice.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--panel-strong), var(--accent) 16%);
+}
+
+.annotation-icon {
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--annotation-color);
+  color: #17201b;
+  font-size: .8rem;
+  font-weight: 900;
+}
+
+.comment-textarea,
+.annotated-pgn {
+  min-height: 5.4rem;
+  white-space: pre-wrap;
+}
+
+.annotated-pgn {
+  min-height: 8rem;
+}
+
 .setting-row {
   display: grid;
   grid-template-columns: 1fr auto;

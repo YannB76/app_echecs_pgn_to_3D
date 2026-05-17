@@ -14,6 +14,11 @@ const moveMetric = document.querySelector("#moveMetric");
 const pieceMetric = document.querySelector("#pieceMetric");
 const moveSlider = document.querySelector("#moveSlider");
 const moveLabel = document.querySelector("#moveLabel");
+const annotationCurrent = document.querySelector("#annotationCurrent");
+const annotationChoices = document.querySelector("#annotationChoices");
+const moveComment = document.querySelector("#moveComment");
+const clearCommentButton = document.querySelector("#clearComment");
+const annotatedPgn = document.querySelector("#annotatedPgn");
 const openOptionsButton = document.querySelector("#openOptions");
 const closeOptionsButton = document.querySelector("#closeOptions");
 const optionsOverlay = document.querySelector("#optionsOverlay");
@@ -147,6 +152,7 @@ let lastFen = new Chess().fen();
 let lastMoveCount = 0;
 let timeline = [{ fen: lastFen, label: "Depart" }];
 let currentMoveIndex = 0;
+let moveAnnotations = new Map();
 let soundEnabled = true;
 let soundVolume = 0.75;
 let soundTheme = "wood";
@@ -254,8 +260,21 @@ const pieceModelThemes = {
     }
   }
 };
+const annotationTypes = [
+  { id: "brilliant", label: "Brillant", icon: "!!", color: "#72d7b2" },
+  { id: "excellent", label: "Excellent", icon: "!", color: "#9bb7df" },
+  { id: "theory", label: "Theorique", icon: "📖", color: "#d7b48a" },
+  { id: "best", label: "Meilleur", icon: "★", color: "#9ccc65" },
+  { id: "very-good", label: "Tres bien", icon: "👍", color: "#8ab661" },
+  { id: "good", label: "Bon", icon: "✓", color: "#9ccf86" },
+  { id: "inaccuracy", label: "Imprecision", icon: "?!", color: "#f4cf45" },
+  { id: "mistake", label: "Erreur", icon: "?", color: "#f2a65a" },
+  { id: "miss", label: "Manque", icon: "×", color: "#ec8574" },
+  { id: "blunder", label: "Gaffe", icon: "??", color: "#e8583c" }
+];
 
 buildBoard();
+buildAnnotationChoices();
 populateGameLibrary();
 initializeDefaultGame();
 resize();
@@ -279,10 +298,12 @@ function renderCurrentInput() {
   const source = pgnInput.value.trim();
   try {
     timeline = timelineFromText(source);
+    moveAnnotations = new Map();
     currentMoveIndex = 0;
     lastFen = timeline[currentMoveIndex].fen;
     lastMoveCount = currentMoveIndex;
     showTimelinePosition(currentMoveIndex);
+    updateAnnotatedPgn();
     setStatus(`Rendu genere depuis ${sourceLooksLikeFen(source) ? "FEN" : "PGN"}.`);
   } catch (error) {
     setStatus(error.message || "Impossible de lire cette position.", true);
@@ -294,6 +315,16 @@ previousMoveButton.addEventListener("click", () => showTimelinePosition(currentM
 nextMoveButton.addEventListener("click", () => showTimelinePosition(currentMoveIndex + 1));
 lastMoveButton.addEventListener("click", () => showTimelinePosition(timeline.length - 1));
 moveSlider.addEventListener("input", () => showTimelinePosition(Number(moveSlider.value)));
+
+moveComment.addEventListener("input", () => {
+  updateCurrentAnnotation({ text: moveComment.value });
+});
+
+clearCommentButton.addEventListener("click", () => {
+  moveAnnotations.delete(currentMoveIndex);
+  updateAnnotationPanel();
+  updateAnnotatedPgn();
+});
 
 openOptionsButton.addEventListener("click", () => {
   optionsOverlay.hidden = false;
@@ -450,6 +481,22 @@ function populateGameLibrary() {
   customOption.value = "custom";
   customOption.textContent = "PGN personnalise";
   gameLibrary.append(customOption);
+}
+
+function buildAnnotationChoices() {
+  annotationTypes.forEach((type) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "annotation-choice";
+    button.dataset.annotation = type.id;
+    button.innerHTML = `<span class="annotation-icon" style="--annotation-color: ${type.color}">${type.icon}</span><span>${type.label}</span>`;
+    button.addEventListener("click", () => {
+      const current = moveAnnotations.get(currentMoveIndex);
+      const nextType = current?.type === type.id ? "" : type.id;
+      updateCurrentAnnotation({ type: nextType });
+    });
+    annotationChoices.append(button);
+  });
 }
 
 function loadSelectedGame(gameId) {
@@ -651,6 +698,7 @@ function showTimelinePosition(index) {
     renderFen(entry.fen, { moveCount: safeIndex });
   }
   updateMovePlayer(entry);
+  updateAnnotationPanel();
   playMoveSound(entry, previousMoveIndex);
 }
 
@@ -663,6 +711,82 @@ function updateMovePlayer(entry) {
   previousMoveButton.disabled = currentMoveIndex === 0;
   nextMoveButton.disabled = currentMoveIndex >= timeline.length - 1;
   lastMoveButton.disabled = currentMoveIndex >= timeline.length - 1;
+}
+
+function updateCurrentAnnotation(patch) {
+  if (currentMoveIndex === 0) return;
+
+  const current = moveAnnotations.get(currentMoveIndex) ?? { type: "", text: "" };
+  const next = { ...current, ...patch };
+
+  if (!next.type && !next.text.trim()) {
+    moveAnnotations.delete(currentMoveIndex);
+  } else {
+    moveAnnotations.set(currentMoveIndex, next);
+  }
+
+  updateAnnotationPanel();
+  updateAnnotatedPgn();
+}
+
+function updateAnnotationPanel() {
+  const entry = timeline[currentMoveIndex];
+  const annotation = moveAnnotations.get(currentMoveIndex) ?? { type: "", text: "" };
+  annotationCurrent.textContent = currentMoveIndex === 0
+    ? "Position initiale"
+    : `${entry.label}`;
+  moveComment.value = annotation.text;
+  moveComment.disabled = currentMoveIndex === 0;
+  clearCommentButton.disabled = currentMoveIndex === 0 || (!annotation.type && !annotation.text);
+
+  annotationChoices.querySelectorAll(".annotation-choice").forEach((button) => {
+    button.disabled = currentMoveIndex === 0;
+    button.classList.toggle("active", button.dataset.annotation === annotation.type);
+  });
+}
+
+function updateAnnotatedPgn() {
+  annotatedPgn.value = buildAnnotatedPgn();
+}
+
+function buildAnnotatedPgn() {
+  const headers = pgnInput.value
+    .split(/\r?\n/)
+    .filter((line) => /^\[[^\]]+\]$/.test(line.trim()))
+    .join("\n");
+  const moves = [];
+
+  for (let index = 1; index < timeline.length; index += 1) {
+    const entry = timeline[index];
+    if (index % 2 === 1) {
+      moves.push(`${Math.floor(index / 2) + 1}.`);
+    } else if (index === timeline.length - 1 && entry.move?.color === "b") {
+      moves.push(`${Math.floor(index / 2)}...`);
+    }
+
+    moves.push(entry.move?.san ?? entry.label.replace(/^\d+\.\.\.\s|^\d+\.\s/, ""));
+
+    const annotation = moveAnnotations.get(index);
+    if (annotation?.type || annotation?.text.trim()) {
+      moves.push(`{${formatPgnComment(annotation)}}`);
+    }
+  }
+
+  const result = sourceLooksLikeFen(pgnInput.value) ? "" : getPgnResult();
+  return `${headers}${headers ? "\n\n" : ""}${moves.join(" ")}${result ? ` ${result}` : ""}`.trim();
+}
+
+function formatPgnComment(annotation) {
+  const type = annotationTypes.find((entry) => entry.id === annotation.type);
+  const parts = [];
+  if (type) parts.push(`${type.icon} ${type.label}`);
+  if (annotation.text.trim()) parts.push(annotation.text.trim().replace(/[{}]/g, ""));
+  return parts.join(" - ");
+}
+
+function getPgnResult() {
+  const result = pgnInput.value.match(/\s(1-0|0-1|1\/2-1\/2|\*)\s*$/);
+  return result?.[1] ?? "";
 }
 
 function animateTimelineStep(fromEntry, toEntry, isForward) {
