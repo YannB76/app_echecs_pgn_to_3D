@@ -577,12 +577,12 @@ async function loadRealModels() {
     k: "King V1.obj"
   };
   const heights = {
-    p: 0.74,
-    r: 0.86,
-    n: 0.94,
-    b: 1.02,
-    q: 1.12,
-    k: 1.2
+    p: 0.9,
+    r: 1.05,
+    n: 1.13,
+    b: 1.22,
+    q: 1.34,
+    k: 1.44
   };
 
   for (const [type, file] of Object.entries(modelFiles)) {
