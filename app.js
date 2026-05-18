@@ -38,6 +38,9 @@ const backgroundImageSelect = document.querySelector("#backgroundImage");
 const backgroundColorInput = document.querySelector("#backgroundColor");
 const pieceScaleInput = document.querySelector("#pieceScale");
 const pieceScaleLabel = document.querySelector("#pieceScaleLabel");
+const blackPieceColorInput = document.querySelector("#blackPieceColor");
+const blackPieceLightnessInput = document.querySelector("#blackPieceLightness");
+const blackPieceLightnessLabel = document.querySelector("#blackPieceLightnessLabel");
 const lightIntensityInput = document.querySelector("#lightIntensity");
 const lightIntensityLabel = document.querySelector("#lightIntensityLabel");
 const shadowIntensityInput = document.querySelector("#shadowIntensity");
@@ -173,6 +176,8 @@ let animationSpeed = 1;
 let randomAnimationSpeed = false;
 let selectedPieceTheme = "ornate";
 let selectedBackgroundImage = "bd5835a3-49d6-442d-ad70-be464ae4dc6c.png";
+let blackPieceBaseColor = "#24282d";
+let blackPieceLightness = 1;
 const backgroundImageTextures = new Map();
 const loadedModelThemes = new Map();
 
@@ -428,6 +433,24 @@ pieceScaleInput.addEventListener("input", () => {
   pieceScaleLabel.value = `${pieceScaleInput.value}%`;
   renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
 });
+
+blackPieceColorInput.addEventListener("input", () => {
+  blackPieceBaseColor = blackPieceColorInput.value;
+  updateBlackPieceMaterial();
+});
+
+blackPieceLightnessInput.addEventListener("input", () => {
+  blackPieceLightness = Number(blackPieceLightnessInput.value) / 100;
+  blackPieceLightnessLabel.value = `${blackPieceLightnessInput.value}%`;
+  updateBlackPieceMaterial();
+});
+
+function updateBlackPieceMaterial() {
+  const color = new THREE.Color(blackPieceBaseColor).multiplyScalar(blackPieceLightness);
+  blackMat.color.copy(color);
+  blackMat.emissive.copy(color).multiplyScalar(Math.max(0, blackPieceLightness - 1) * 0.28);
+  renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
+}
 
 pieceThemeSelect.addEventListener("change", async () => {
   selectedPieceTheme = pieceThemeSelect.value;
