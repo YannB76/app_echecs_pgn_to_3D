@@ -34,6 +34,7 @@ const pieceThemeSelect = document.querySelector("#pieceTheme");
 const lightSquareColorInput = document.querySelector("#lightSquareColor");
 const darkSquareColorInput = document.querySelector("#darkSquareColor");
 const backgroundModeSelect = document.querySelector("#backgroundMode");
+const backgroundImageSelect = document.querySelector("#backgroundImage");
 const backgroundColorInput = document.querySelector("#backgroundColor");
 const pieceScaleInput = document.querySelector("#pieceScale");
 const pieceScaleLabel = document.querySelector("#pieceScaleLabel");
@@ -171,25 +172,14 @@ let moveAnimationsEnabled = true;
 let animationSpeed = 1;
 let randomAnimationSpeed = false;
 let selectedPieceTheme = "ornate";
-let backgroundImageTexture = null;
+let selectedBackgroundImage = "bd5835a3-49d6-442d-ad70-be464ae4dc6c.png";
+const backgroundImageTextures = new Map();
 const loadedModelThemes = new Map();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x37a072);
 const backgroundTextureLoader = new THREE.TextureLoader();
-backgroundTextureLoader.load(
-  "images/bd5835a3-49d6-442d-ad70-be464ae4dc6c.png",
-  (texture) => {
-    texture.colorSpace = THREE.SRGBColorSpace;
-    backgroundImageTexture = texture;
-    applyBackground();
-  },
-  undefined,
-  () => {
-    backgroundModeSelect.value = "color";
-    applyBackground();
-  }
-);
+loadBackgroundImage(selectedBackgroundImage);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
 camera.position.set(0, 6.4, -8.4);
@@ -399,12 +389,38 @@ document.querySelector("#resetCamera").addEventListener("click", () => {
 });
 
 backgroundModeSelect.addEventListener("change", applyBackground);
+backgroundImageSelect.addEventListener("change", () => {
+  selectedBackgroundImage = backgroundImageSelect.value;
+  backgroundModeSelect.value = "image";
+  loadBackgroundImage(selectedBackgroundImage);
+});
 backgroundColorInput.addEventListener("input", applyBackground);
 
 function applyBackground() {
-  scene.background = backgroundModeSelect.value === "image" && backgroundImageTexture
-    ? backgroundImageTexture
+  scene.background = backgroundModeSelect.value === "image" && backgroundImageTextures.has(selectedBackgroundImage)
+    ? backgroundImageTextures.get(selectedBackgroundImage)
     : new THREE.Color(backgroundColorInput.value);
+}
+
+function loadBackgroundImage(fileName) {
+  if (backgroundImageTextures.has(fileName)) {
+    applyBackground();
+    return;
+  }
+
+  backgroundTextureLoader.load(
+    `images/${fileName}`,
+    (texture) => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      backgroundImageTextures.set(fileName, texture);
+      applyBackground();
+    },
+    undefined,
+    () => {
+      backgroundModeSelect.value = "color";
+      applyBackground();
+    }
+  );
 }
 
 pieceScaleInput.addEventListener("input", () => {
