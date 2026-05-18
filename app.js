@@ -53,6 +53,13 @@ const soundEnabledInput = document.querySelector("#soundEnabled");
 const soundVolumeInput = document.querySelector("#soundVolume");
 const soundVolumeLabel = document.querySelector("#soundVolumeLabel");
 const soundThemeSelect = document.querySelector("#soundTheme");
+const musicTrackSelect = document.querySelector("#musicTrack");
+const musicPlayPauseButton = document.querySelector("#musicPlayPause");
+const musicStopButton = document.querySelector("#musicStop");
+const musicLoopInput = document.querySelector("#musicLoop");
+const musicVolumeInput = document.querySelector("#musicVolume");
+const musicVolumeLabel = document.querySelector("#musicVolumeLabel");
+const musicStatus = document.querySelector("#musicStatus");
 
 const squareSize = 1;
 const boardOffset = 3.5;
@@ -165,7 +172,10 @@ let moveAnnotations = new Map();
 let soundEnabled = true;
 let soundVolume = 0.2;
 let soundTheme = "wood";
+let musicVolume = 0.35;
+let selectedMusicTrack = "";
 let audioContext = null;
+const musicPlayer = new Audio();
 let activeAnimation = null;
 let realModelsLoading = false;
 let pieceScale = 0.8;
@@ -185,11 +195,14 @@ const defaultBackgroundImages = [
 ];
 const backgroundImageTextures = new Map();
 const loadedModelThemes = new Map();
+musicPlayer.loop = true;
+musicPlayer.volume = musicVolume;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x37a072);
 const backgroundTextureLoader = new THREE.TextureLoader();
 discoverBackgroundImages();
+discoverMusicTracks();
 loadBackgroundImage(selectedBackgroundImage);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -394,6 +407,53 @@ soundThemeSelect.addEventListener("change", () => {
   playSoundEffect("preview");
 });
 
+musicTrackSelect.addEventListener("change", () => {
+  selectedMusicTrack = musicTrackSelect.value;
+  loadMusicTrack(selectedMusicTrack);
+});
+
+musicPlayPauseButton.addEventListener("click", async () => {
+  if (!selectedMusicTrack) return;
+
+  if (musicPlayer.paused) {
+    try {
+      await musicPlayer.play();
+      updateMusicStatus("Musique en cours.");
+    } catch (error) {
+      updateMusicStatus("Lecture bloquee par le navigateur. Clique a nouveau sur Lire.");
+    }
+  } else {
+    musicPlayer.pause();
+    updateMusicStatus("Musique en pause.");
+  }
+
+  updateMusicButtons();
+});
+
+musicStopButton.addEventListener("click", () => {
+  musicPlayer.pause();
+  musicPlayer.currentTime = 0;
+  updateMusicStatus(selectedMusicTrack ? "Musique arretee." : "Aucun morceau disponible.");
+  updateMusicButtons();
+});
+
+musicLoopInput.addEventListener("change", () => {
+  musicPlayer.loop = musicLoopInput.checked;
+});
+
+musicVolumeInput.addEventListener("input", () => {
+  musicVolume = Number(musicVolumeInput.value) / 100;
+  musicPlayer.volume = musicVolume;
+  musicVolumeLabel.value = `${musicVolumeInput.value}%`;
+});
+
+musicPlayer.addEventListener("play", updateMusicButtons);
+musicPlayer.addEventListener("pause", updateMusicButtons);
+musicPlayer.addEventListener("ended", () => {
+  updateMusicStatus("Musique terminee.");
+  updateMusicButtons();
+});
+
 document.querySelector("#resetCamera").addEventListener("click", () => {
   camera.position.set(0, 6.4, -8.4);
   controls.target.set(0, 0, 0);
@@ -472,7 +532,79 @@ function labelFromImageFileName(fileName) {
   return fileName
     .replace(/\.[^.]+$/, "")
     .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`)
+    .join(" ");
+}
+
+async function discoverMusicTracks() {
+  try {
+    const response = await fetch("music/");
+    if (!response.ok) {
+      populateMusicTrackSelect([]);
+      return;
+    }
+
+    const html = await response.text();
+    const documentFragment = new DOMParser().parseFromString(html, "text/html");
+    const discovered = [...documentFragment.querySelectorAll("a")]
+      .map((link) => decodeURIComponent(link.getAttribute("href") ?? ""))
+      .map((href) => href.split("/").pop())
+      .filter((fileName) => /\.(mp3|ogg|wav|m4a)$/i.test(fileName));
+
+    populateMusicTrackSelect([...new Set(discovered)]);
+  } catch (error) {
+    populateMusicTrackSelect([]);
+  }
+}
+
+function populateMusicTrackSelect(trackFiles) {
+  const currentValue = musicTrackSelect.value || selectedMusicTrack;
+  musicTrackSelect.innerHTML = "";
+
+  if (trackFiles.length === 0) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Aucun morceau trouve";
+    musicTrackSelect.append(option);
+    selectedMusicTrack = "";
+    loadMusicTrack("");
+    updateMusicStatus("Ajoute des fichiers MP3 dans le dossier music puis recharge l'app.");
+    return;
+  }
+
+  trackFiles.forEach((fileName) => {
+    const option = document.createElement("option");
+    option.value = fileName;
+    option.textContent = labelFromImageFileName(fileName);
+    musicTrackSelect.append(option);
+  });
+
+  selectedMusicTrack = trackFiles.includes(currentValue) ? currentValue : trackFiles[0];
+  musicTrackSelect.value = selectedMusicTrack;
+  loadMusicTrack(selectedMusicTrack);
+  updateMusicStatus(`${trackFiles.length} morceau${trackFiles.length > 1 ? "x" : ""} disponible${trackFiles.length > 1 ? "s" : ""}.`);
+}
+
+function loadMusicTrack(fileName) {
+  musicPlayer.pause();
+  musicPlayer.currentTime = 0;
+  selectedMusicTrack = fileName;
+  musicPlayer.src = fileName ? `music/${encodeURIComponent(fileName)}` : "";
+  musicPlayer.load();
+  updateMusicButtons();
+}
+
+function updateMusicButtons() {
+  const hasTrack = Boolean(selectedMusicTrack);
+  musicPlayPauseButton.disabled = !hasTrack;
+  musicStopButton.disabled = !hasTrack;
+  musicPlayPauseButton.textContent = !hasTrack || musicPlayer.paused ? "Lire" : "Pause";
+}
+
+function updateMusicStatus(message) {
+  musicStatus.textContent = message;
 }
 
 pieceScaleInput.addEventListener("input", () => {

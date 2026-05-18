@@ -234,6 +234,28 @@
                   <option value="arcade">Arcade</option>
                 </select>
               </label>
+              <div class="section-divider"></div>
+              <h4>Musique</h4>
+              <label class="select-row">
+                <span>Morceau</span>
+                <select id="musicTrack">
+                  <option value="">Aucun morceau trouve</option>
+                </select>
+              </label>
+              <div class="button-row">
+                <button id="musicPlayPause" type="button">Lire</button>
+                <button id="musicStop" type="button">Stop</button>
+              </div>
+              <label class="toggle-row">
+                <span>Boucle</span>
+                <input id="musicLoop" type="checkbox" checked />
+              </label>
+              <div class="setting-row slider-setting">
+                <span>Volume musique</span>
+                <input id="musicVolume" type="range" min="0" max="100" value="35" aria-label="Volume de la musique" />
+                <output id="musicVolumeLabel" for="musicVolume">35%</output>
+              </div>
+              <p id="musicStatus" class="hint">Ajoute des fichiers MP3 dans le dossier music puis recharge l'app.</p>
             </section>
           </div>
         </div>
