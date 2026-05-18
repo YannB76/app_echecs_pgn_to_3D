@@ -14,6 +14,8 @@ const whitePlayerPortrait = document.querySelector("#whitePlayerPortrait");
 const blackPlayerPortrait = document.querySelector("#blackPlayerPortrait");
 const whitePlayerImage = document.querySelector("#whitePlayerImage");
 const blackPlayerImage = document.querySelector("#blackPlayerImage");
+const whitePlayerVideo = document.querySelector("#whitePlayerVideo");
+const blackPlayerVideo = document.querySelector("#blackPlayerVideo");
 const whitePlayerName = document.querySelector("#whitePlayerName");
 const blackPlayerName = document.querySelector("#blackPlayerName");
 const whitePortraitXInput = document.querySelector("#whitePortraitX");
@@ -1037,12 +1039,12 @@ async function loadPlayerFolder(playerName) {
 
     const html = await response.text();
     const documentFragment = new DOMParser().parseFromString(html, "text/html");
-    const imageFiles = [...documentFragment.querySelectorAll("a")]
+    const mediaFiles = [...documentFragment.querySelectorAll("a")]
       .map((link) => decodeURIComponent(link.getAttribute("href") ?? ""))
       .map((href) => href.split("/").pop())
-      .filter((fileName) => /\.(png|jpe?g|webp|gif)$/i.test(fileName));
+      .filter((fileName) => /\.(png|jpe?g|webp|gif|mp4|webm|mov)$/i.test(fileName));
 
-    const images = mapPlayerImages(playerName, imageFiles);
+    const images = mapPlayerImages(playerName, mediaFiles);
     if (images.default) {
       playerImagesByName.set(normalizePlayerName(playerName), {
         name: playerName,
@@ -1059,7 +1061,7 @@ function mapPlayerImages(playerName, imageFiles) {
   imageFiles.forEach((fileName) => {
     const type = annotationTypeFromFileName(fileName);
     if (type && !images[type]) {
-      images[type] = playerImagePath(playerName, fileName);
+      images[type] = playerMedia(playerName, fileName);
     }
   });
 
@@ -1068,14 +1070,18 @@ function mapPlayerImages(playerName, imageFiles) {
     ?? imageFiles[0];
 
   if (defaultFile) {
-    images.default = playerImagePath(playerName, defaultFile);
+    images.default = playerMedia(playerName, defaultFile);
   }
 
   return images;
 }
 
-function playerImagePath(playerName, fileName) {
-  return `players/${encodeURIComponent(playerName)}/${encodeURIComponent(fileName)}`;
+function playerMedia(playerName, fileName) {
+  const path = `players/${encodeURIComponent(playerName)}/${encodeURIComponent(fileName)}`;
+  return {
+    path,
+    kind: /\.(mp4|webm|mov)$/i.test(fileName) ? "video" : "image"
+  };
 }
 
 function annotationTypeFromFileName(fileName) {
@@ -1107,18 +1113,41 @@ function updatePlayerPortraits(source) {
   const black = playerImageForName(pgnTagValue(source, "Black"));
   const moveAnnotation = currentMoveIndex > 0 ? moveAnnotations.get(currentMoveIndex) : null;
   const moveColor = timeline[currentMoveIndex]?.move?.color;
-  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerName, white, moveColor === "w" ? moveAnnotation?.type : "");
-  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerName, black, moveColor === "b" ? moveAnnotation?.type : "");
+  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerVideo, whitePlayerName, white, moveColor === "w" ? moveAnnotation?.type : "");
+  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerVideo, blackPlayerName, black, moveColor === "b" ? moveAnnotation?.type : "");
   playerPortraits.hidden = !white && !black;
 }
 
-function updatePlayerPortrait(container, image, label, player, annotationType = "") {
+function updatePlayerPortrait(container, image, video, label, player, annotationType = "") {
   container.hidden = !player;
-  if (!player) return;
+  if (!player) {
+    stopPlayerVideo(video);
+    return;
+  }
 
-  image.src = player.images[annotationType] ?? player.images.default;
+  const media = player.images[annotationType] ?? player.images.default;
   image.alt = `Portrait de ${player.name}`;
   label.textContent = player.name;
+
+  if (media.kind === "video") {
+    image.hidden = true;
+    video.hidden = false;
+    if (!video.src.endsWith(media.path)) {
+      video.src = media.path;
+      video.load();
+    }
+    video.play().catch(() => {});
+  } else {
+    stopPlayerVideo(video);
+    video.hidden = true;
+    image.hidden = false;
+    image.src = media.path;
+  }
+}
+
+function stopPlayerVideo(video) {
+  video.pause();
+  video.currentTime = 0;
 }
 
 function loadPortraitSettings() {

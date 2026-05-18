@@ -133,13 +133,19 @@ button:disabled:hover {
   transform: translate(-50%, -50%) rotate(var(--portrait-rotation));
 }
 
-.player-portrait img {
+.player-portrait img,
+.player-portrait video {
   width: 100%;
   aspect-ratio: 3 / 4;
   object-fit: cover;
   border: 3px solid color-mix(in srgb, var(--accent), white 20%);
   border-radius: 8px;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / .14);
+}
+
+.player-portrait video[hidden],
+.player-portrait img[hidden] {
+  display: none;
 }
 
 .player-portrait figcaption {
