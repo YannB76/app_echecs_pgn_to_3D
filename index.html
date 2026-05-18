@@ -131,6 +131,7 @@
           <nav class="options-tabs" aria-label="Categories d'options">
             <button class="option-tab active" type="button" data-tab="themes">Themes</button>
             <button class="option-tab" type="button" data-tab="display">Affichage</button>
+            <button class="option-tab" type="button" data-tab="portraits">Portraits</button>
             <button class="option-tab" type="button" data-tab="lighting">Eclairage</button>
             <button class="option-tab" type="button" data-tab="gameplay">Gameplay</button>
             <button class="option-tab" type="button" data-tab="audio">Audio</button>
@@ -191,6 +192,46 @@
                 <span>Luminosite noires</span>
                 <input id="blackPieceLightness" type="range" min="70" max="170" value="100" aria-label="Luminosite des pieces noires" />
                 <output id="blackPieceLightnessLabel" for="blackPieceLightness">100%</output>
+              </div>
+            </section>
+
+            <section class="option-group" data-panel="portraits" aria-label="Options des portraits">
+              <h3>Portraits</h3>
+              <h4>Joueur blanc</h4>
+              <div class="setting-row slider-setting">
+                <span>Horizontal</span>
+                <input id="whitePortraitX" type="range" min="0" max="100" value="11" aria-label="Position horizontale du portrait blanc" />
+                <output id="whitePortraitXLabel" for="whitePortraitX">11%</output>
+              </div>
+              <div class="setting-row slider-setting">
+                <span>Vertical</span>
+                <input id="whitePortraitY" type="range" min="0" max="100" value="50" aria-label="Position verticale du portrait blanc" />
+                <output id="whitePortraitYLabel" for="whitePortraitY">50%</output>
+              </div>
+              <div class="setting-row slider-setting">
+                <span>Taille</span>
+                <input id="whitePortraitSize" type="range" min="60" max="180" value="100" aria-label="Taille du portrait blanc" />
+                <output id="whitePortraitSizeLabel" for="whitePortraitSize">100%</output>
+              </div>
+              <div class="section-divider"></div>
+              <h4>Joueur noir</h4>
+              <div class="setting-row slider-setting">
+                <span>Horizontal</span>
+                <input id="blackPortraitX" type="range" min="0" max="100" value="69" aria-label="Position horizontale du portrait noir" />
+                <output id="blackPortraitXLabel" for="blackPortraitX">69%</output>
+              </div>
+              <div class="setting-row slider-setting">
+                <span>Vertical</span>
+                <input id="blackPortraitY" type="range" min="0" max="100" value="38" aria-label="Position verticale du portrait noir" />
+                <output id="blackPortraitYLabel" for="blackPortraitY">38%</output>
+              </div>
+              <div class="setting-row slider-setting">
+                <span>Taille</span>
+                <input id="blackPortraitSize" type="range" min="60" max="180" value="100" aria-label="Taille du portrait noir" />
+                <output id="blackPortraitSizeLabel" for="blackPortraitSize">100%</output>
+              </div>
+              <div class="button-row">
+                <button id="resetPortraits" type="button">Reinitialiser les portraits</button>
               </div>
             </section>
 

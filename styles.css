@@ -121,13 +121,16 @@ button:disabled:hover {
 
 .player-portrait {
   position: absolute;
-  width: clamp(7rem, 10vw, 11rem);
+  left: var(--portrait-x);
+  top: var(--portrait-y);
+  width: calc(clamp(7rem, 10vw, 11rem) * var(--portrait-size));
   margin: 0;
   display: grid;
   justify-items: center;
   gap: .35rem;
   opacity: .94;
   filter: drop-shadow(0 1rem 1.5rem rgb(0 0 0 / .55));
+  transform: translate(-50%, -50%) rotate(var(--portrait-rotation));
 }
 
 .player-portrait img {
@@ -156,15 +159,17 @@ button:disabled:hover {
 }
 
 .player-portrait-white {
-  left: clamp(1.6rem, 6vw, 7rem);
-  top: clamp(12rem, 37vh, 24rem);
-  transform: rotate(-4deg);
+  --portrait-x: 11%;
+  --portrait-y: 50%;
+  --portrait-size: 1;
+  --portrait-rotation: -4deg;
 }
 
 .player-portrait-black {
-  right: clamp(14rem, 22vw, 29rem);
-  top: clamp(9rem, 26vh, 17rem);
-  transform: rotate(3deg);
+  --portrait-x: 69%;
+  --portrait-y: 38%;
+  --portrait-size: 1;
+  --portrait-rotation: 3deg;
 }
 
 .control-panel {
@@ -397,7 +402,13 @@ input[type="range"] {
 #shadowIntensityLabel,
 #animationSpeedLabel,
 #soundVolumeLabel,
-#musicVolumeLabel {
+#musicVolumeLabel,
+#whitePortraitXLabel,
+#whitePortraitYLabel,
+#whitePortraitSizeLabel,
+#blackPortraitXLabel,
+#blackPortraitYLabel,
+#blackPortraitSizeLabel {
   color: var(--text);
   text-align: right;
 }

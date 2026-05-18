@@ -16,6 +16,19 @@ const whitePlayerImage = document.querySelector("#whitePlayerImage");
 const blackPlayerImage = document.querySelector("#blackPlayerImage");
 const whitePlayerName = document.querySelector("#whitePlayerName");
 const blackPlayerName = document.querySelector("#blackPlayerName");
+const whitePortraitXInput = document.querySelector("#whitePortraitX");
+const whitePortraitYInput = document.querySelector("#whitePortraitY");
+const whitePortraitSizeInput = document.querySelector("#whitePortraitSize");
+const blackPortraitXInput = document.querySelector("#blackPortraitX");
+const blackPortraitYInput = document.querySelector("#blackPortraitY");
+const blackPortraitSizeInput = document.querySelector("#blackPortraitSize");
+const whitePortraitXLabel = document.querySelector("#whitePortraitXLabel");
+const whitePortraitYLabel = document.querySelector("#whitePortraitYLabel");
+const whitePortraitSizeLabel = document.querySelector("#whitePortraitSizeLabel");
+const blackPortraitXLabel = document.querySelector("#blackPortraitXLabel");
+const blackPortraitYLabel = document.querySelector("#blackPortraitYLabel");
+const blackPortraitSizeLabel = document.querySelector("#blackPortraitSizeLabel");
+const resetPortraitsButton = document.querySelector("#resetPortraits");
 const turnMetric = document.querySelector("#turnMetric");
 const moveMetric = document.querySelector("#moveMetric");
 const pieceMetric = document.querySelector("#pieceMetric");
@@ -203,6 +216,11 @@ const defaultBackgroundImages = [
 const backgroundImageTextures = new Map();
 const loadedModelThemes = new Map();
 const playerImagesByName = new Map();
+const defaultPortraitSettings = {
+  white: { x: 11, y: 50, size: 100 },
+  black: { x: 69, y: 38, size: 100 }
+};
+let portraitSettings = loadPortraitSettings();
 musicPlayer.loop = true;
 musicPlayer.volume = musicVolume;
 
@@ -212,6 +230,7 @@ const backgroundTextureLoader = new THREE.TextureLoader();
 discoverBackgroundImages();
 discoverMusicTracks();
 discoverPlayerImages();
+applyPortraitSettings();
 loadBackgroundImage(selectedBackgroundImage);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -462,6 +481,27 @@ musicPlayer.addEventListener("pause", updateMusicButtons);
 musicPlayer.addEventListener("ended", () => {
   updateMusicStatus("Musique terminee.");
   updateMusicButtons();
+});
+
+[
+  whitePortraitXInput,
+  whitePortraitYInput,
+  whitePortraitSizeInput,
+  blackPortraitXInput,
+  blackPortraitYInput,
+  blackPortraitSizeInput
+].forEach((input) => {
+  input.addEventListener("input", () => {
+    portraitSettings = readPortraitSettingsFromControls();
+    savePortraitSettings();
+    applyPortraitSettings();
+  });
+});
+
+resetPortraitsButton.addEventListener("click", () => {
+  portraitSettings = structuredClone(defaultPortraitSettings);
+  savePortraitSettings();
+  applyPortraitSettings();
 });
 
 document.querySelector("#resetCamera").addEventListener("click", () => {
@@ -973,6 +1013,77 @@ function updatePlayerPortrait(container, image, label, player) {
   image.src = player.image;
   image.alt = `Portrait de ${player.name}`;
   label.textContent = player.name;
+}
+
+function loadPortraitSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("pgn3dPortraitSettings") ?? "{}");
+    return {
+      white: {
+        ...defaultPortraitSettings.white,
+        ...saved.white
+      },
+      black: {
+        ...defaultPortraitSettings.black,
+        ...saved.black
+      }
+    };
+  } catch (error) {
+    return structuredClone(defaultPortraitSettings);
+  }
+}
+
+function savePortraitSettings() {
+  localStorage.setItem("pgn3dPortraitSettings", JSON.stringify(portraitSettings));
+}
+
+function readPortraitSettingsFromControls() {
+  return {
+    white: {
+      x: Number(whitePortraitXInput.value),
+      y: Number(whitePortraitYInput.value),
+      size: Number(whitePortraitSizeInput.value)
+    },
+    black: {
+      x: Number(blackPortraitXInput.value),
+      y: Number(blackPortraitYInput.value),
+      size: Number(blackPortraitSizeInput.value)
+    }
+  };
+}
+
+function applyPortraitSettings() {
+  applySinglePortraitSettings("white", whitePlayerPortrait, {
+    x: whitePortraitXInput,
+    y: whitePortraitYInput,
+    size: whitePortraitSizeInput
+  }, {
+    x: whitePortraitXLabel,
+    y: whitePortraitYLabel,
+    size: whitePortraitSizeLabel
+  });
+  applySinglePortraitSettings("black", blackPlayerPortrait, {
+    x: blackPortraitXInput,
+    y: blackPortraitYInput,
+    size: blackPortraitSizeInput
+  }, {
+    x: blackPortraitXLabel,
+    y: blackPortraitYLabel,
+    size: blackPortraitSizeLabel
+  });
+}
+
+function applySinglePortraitSettings(color, element, controls, labels) {
+  const settings = portraitSettings[color];
+  controls.x.value = settings.x;
+  controls.y.value = settings.y;
+  controls.size.value = settings.size;
+  labels.x.value = `${settings.x}%`;
+  labels.y.value = `${settings.y}%`;
+  labels.size.value = `${settings.size}%`;
+  element.style.setProperty("--portrait-x", `${settings.x}%`);
+  element.style.setProperty("--portrait-y", `${settings.y}%`);
+  element.style.setProperty("--portrait-size", `${settings.size / 100}`);
 }
 
 function playerImageForName(playerName) {
