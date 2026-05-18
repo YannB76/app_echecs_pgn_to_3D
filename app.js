@@ -163,7 +163,7 @@ let timeline = [{ fen: lastFen, label: "Depart" }];
 let currentMoveIndex = 0;
 let moveAnnotations = new Map();
 let soundEnabled = true;
-let soundVolume = 1;
+let soundVolume = 0.2;
 let soundTheme = "wood";
 let audioContext = null;
 let activeAnimation = null;
@@ -233,6 +233,7 @@ const soundThemes = {
   crystal: { type: "sine", frequencyRatio: 1.45, gainRatio: 1.35, durationRatio: 0.82 },
   arcade: { type: "square", frequencyRatio: 0.72, gainRatio: 0.95, durationRatio: 1.15 }
 };
+const soundGainMultiplier = 5;
 const pieceModelThemes = {
   ornate: {
     label: "OBJ detaille",
@@ -1130,7 +1131,7 @@ function playToneSequence(notes) {
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
     const duration = note.duration * theme.durationRatio;
-    const targetGain = note.gain * soundVolume * theme.gainRatio;
+    const targetGain = note.gain * soundVolume * theme.gainRatio * soundGainMultiplier;
 
     oscillator.type = theme.type;
     oscillator.frequency.setValueAtTime(note.frequency * theme.frequencyRatio, start);
