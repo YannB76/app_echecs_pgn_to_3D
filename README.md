@@ -33,3 +33,13 @@ assets/models/classic-obj/
 ```
 
 Les OBJ CGTrader extraits sont volontairement ignores par Git, car ils pesent plusieurs centaines de Mo. Pour une version publique fluide sur GitHub Pages, il faudra convertir ces modeles en `.glb` optimises avant de les ajouter au depot.
+
+## Images d'arriere-plan
+
+Les images d'arriere-plan sont chargees depuis :
+
+```text
+images/
+```
+
+Avec le serveur local `lancer_app.bat`, toute image `.png`, `.jpg`, `.jpeg`, `.webp` ou `.gif` ajoutee dans ce dossier apparaitra dans `Options > Affichage > Image` apres rechargement de la page.

@@ -175,15 +175,21 @@ let moveAnimationsEnabled = true;
 let animationSpeed = 1;
 let randomAnimationSpeed = false;
 let selectedPieceTheme = "ornate";
-let selectedBackgroundImage = "bd5835a3-49d6-442d-ad70-be464ae4dc6c.png";
+let selectedBackgroundImage = "bibliotheque-bois-soleil.png";
 let blackPieceBaseColor = "#24282d";
 let blackPieceLightness = 1;
+const defaultBackgroundImages = [
+  "bibliotheque-bois-soleil.png",
+  "salon-moderne-lac.png",
+  "grande-salle-medievale.png"
+];
 const backgroundImageTextures = new Map();
 const loadedModelThemes = new Map();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x37a072);
 const backgroundTextureLoader = new THREE.TextureLoader();
+discoverBackgroundImages();
 loadBackgroundImage(selectedBackgroundImage);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -427,6 +433,46 @@ function loadBackgroundImage(fileName) {
       applyBackground();
     }
   );
+}
+
+async function discoverBackgroundImages() {
+  try {
+    const response = await fetch("images/");
+    if (!response.ok) return;
+
+    const html = await response.text();
+    const documentFragment = new DOMParser().parseFromString(html, "text/html");
+    const discovered = [...documentFragment.querySelectorAll("a")]
+      .map((link) => decodeURIComponent(link.getAttribute("href") ?? ""))
+      .map((href) => href.split("/").pop())
+      .filter((fileName) => /\.(png|jpe?g|webp|gif)$/i.test(fileName));
+
+    const allImages = [...new Set([...defaultBackgroundImages, ...discovered])];
+    populateBackgroundImageSelect(allImages);
+  } catch (error) {
+    populateBackgroundImageSelect(defaultBackgroundImages);
+  }
+}
+
+function populateBackgroundImageSelect(imageFiles) {
+  const currentValue = backgroundImageSelect.value || selectedBackgroundImage;
+  backgroundImageSelect.innerHTML = "";
+  imageFiles.forEach((fileName) => {
+    const option = document.createElement("option");
+    option.value = fileName;
+    option.textContent = labelFromImageFileName(fileName);
+    backgroundImageSelect.append(option);
+  });
+  backgroundImageSelect.value = imageFiles.includes(currentValue)
+    ? currentValue
+    : selectedBackgroundImage;
+}
+
+function labelFromImageFileName(fileName) {
+  return fileName
+    .replace(/\.[^.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 pieceScaleInput.addEventListener("input", () => {
