@@ -1040,22 +1040,33 @@ async function loadPlayerFolder(playerName) {
 
 function mapPlayerImages(playerName, imageFiles) {
   const images = {};
-  imageFiles.forEach((fileName) => {
+  const rankedFiles = [...imageFiles].sort(comparePlayerMediaFiles);
+  rankedFiles.forEach((fileName) => {
     const type = annotationTypeFromFileName(fileName);
     if (type && !images[type]) {
       images[type] = playerMedia(playerName, fileName);
     }
   });
 
-  const defaultFile = imageFiles.find((fileName) => /(^|[-_\s])(default|normal|portrait|base)([-_\s.]|$)/i.test(fileName))
-    ?? imageFiles.find((fileName) => !annotationTypeFromFileName(fileName))
-    ?? imageFiles[0];
+  const defaultFile = rankedFiles.find((fileName) => /(^|[-_\s])(default|normal|portrait|base|neutre|neutral)([-_\s.]|$)/i.test(fileName) && !annotationTypeFromFileName(fileName))
+    ?? rankedFiles.find((fileName) => !annotationTypeFromFileName(fileName))
+    ?? rankedFiles[0];
 
   if (defaultFile) {
     images.default = playerMedia(playerName, defaultFile);
   }
 
   return images;
+}
+
+function comparePlayerMediaFiles(left, right) {
+  return playerMediaScore(right) - playerMediaScore(left) || left.localeCompare(right);
+}
+
+function playerMediaScore(fileName) {
+  const version = Number(fileName.match(/\d+/)?.[0] ?? 0);
+  const isVideo = /\.(mp4|webm|mov)$/i.test(fileName) ? 0.2 : 0;
+  return version + isVideo;
 }
 
 function playerMedia(playerName, fileName) {
@@ -1069,6 +1080,9 @@ function playerMedia(playerName, fileName) {
 function annotationTypeFromFileName(fileName) {
   const normalized = normalizePlayerName(fileName.replace(/\.[^.]+$/, ""));
   const aliases = {
+    victory: ["victory", "victoire", "winner", "win", "gagnant"],
+    defeat: ["defeat", "defaite", "loss", "lose", "loser", "perdant"],
+    draw: ["draw", "nul", "nulle"],
     brilliant: ["brilliant", "brillant"],
     excellent: ["excellent"],
     theory: ["theory", "theorique", "book", "opening"],
@@ -1095,9 +1109,20 @@ function updatePlayerPortraits(source) {
   const black = playerImageForName(pgnTagValue(source, "Black"));
   const moveAnnotation = currentMoveIndex > 0 ? moveAnnotations.get(currentMoveIndex) : null;
   const moveColor = timeline[currentMoveIndex]?.move?.color;
-  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerVideo, whitePlayerName, white, moveColor === "w" ? moveAnnotation?.type : "");
-  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerVideo, blackPlayerName, black, moveColor === "b" ? moveAnnotation?.type : "");
+  const finalTypes = finalPortraitTypes(source);
+  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerVideo, whitePlayerName, white, finalTypes?.white ?? (moveColor === "w" ? moveAnnotation?.type : ""));
+  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerVideo, blackPlayerName, black, finalTypes?.black ?? (moveColor === "b" ? moveAnnotation?.type : ""));
   playerPortraits.hidden = !white && !black;
+}
+
+function finalPortraitTypes(source) {
+  if (currentMoveIndex !== timeline.length - 1 || timeline.length <= 1) return null;
+
+  const result = getPgnResultFromSource(source);
+  if (result === "1-0") return { white: "victory", black: "defeat" };
+  if (result === "0-1") return { white: "defeat", black: "victory" };
+  if (result === "1/2-1/2") return { white: "draw", black: "draw" };
+  return null;
 }
 
 function updatePlayerPortrait(container, image, video, label, player, annotationType = "") {
@@ -1707,7 +1732,11 @@ function formatPgnComment(annotation) {
 }
 
 function getPgnResult() {
-  const result = pgnInput.value.match(/\s(1-0|0-1|1\/2-1\/2|\*)\s*$/);
+  return getPgnResultFromSource(pgnInput.value);
+}
+
+function getPgnResultFromSource(source) {
+  const result = source.match(/\s(1-0|0-1|1\/2-1\/2|\*)\s*$/);
   return result?.[1] ?? "";
 }
 
