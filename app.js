@@ -174,6 +174,18 @@ const loadedModelThemes = new Map();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x37a072);
+const backgroundTextureLoader = new THREE.TextureLoader();
+backgroundTextureLoader.load(
+  "images/bd5835a3-49d6-442d-ad70-be464ae4dc6c.png",
+  (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    scene.background = texture;
+  },
+  undefined,
+  () => {
+    scene.background = new THREE.Color(backgroundColorInput.value);
+  }
+);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
 camera.position.set(0, 6.4, -8.4);
@@ -383,7 +395,7 @@ document.querySelector("#resetCamera").addEventListener("click", () => {
 });
 
 backgroundColorInput.addEventListener("input", () => {
-  scene.background.set(backgroundColorInput.value);
+  scene.background = new THREE.Color(backgroundColorInput.value);
 });
 
 pieceScaleInput.addEventListener("input", () => {
