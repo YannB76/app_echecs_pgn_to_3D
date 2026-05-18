@@ -413,6 +413,8 @@ clearCommentButton.addEventListener("click", () => {
   moveAnnotations.delete(currentMoveIndex);
   updateAnnotationPanel();
   updateAnnotatedPgn();
+  updateAnnotationBubble();
+  updatePlayerPortraits(pgnInput.value.trim());
 });
 
 openOptionsButton.addEventListener("click", () => {
@@ -1035,20 +1037,64 @@ async function loadPlayerFolder(playerName) {
 
     const html = await response.text();
     const documentFragment = new DOMParser().parseFromString(html, "text/html");
-    const imageFile = [...documentFragment.querySelectorAll("a")]
+    const imageFiles = [...documentFragment.querySelectorAll("a")]
       .map((link) => decodeURIComponent(link.getAttribute("href") ?? ""))
       .map((href) => href.split("/").pop())
-      .find((fileName) => /\.(png|jpe?g|webp|gif)$/i.test(fileName));
+      .filter((fileName) => /\.(png|jpe?g|webp|gif)$/i.test(fileName));
 
-    if (imageFile) {
+    const images = mapPlayerImages(playerName, imageFiles);
+    if (images.default) {
       playerImagesByName.set(normalizePlayerName(playerName), {
         name: playerName,
-        image: `players/${encodeURIComponent(playerName)}/${encodeURIComponent(imageFile)}`
+        images
       });
     }
   } catch (error) {
     // A missing player folder should not block the board.
   }
+}
+
+function mapPlayerImages(playerName, imageFiles) {
+  const images = {};
+  imageFiles.forEach((fileName) => {
+    const type = annotationTypeFromFileName(fileName);
+    if (type && !images[type]) {
+      images[type] = playerImagePath(playerName, fileName);
+    }
+  });
+
+  const defaultFile = imageFiles.find((fileName) => /(^|[-_\s])(default|normal|portrait|base)([-_\s.]|$)/i.test(fileName))
+    ?? imageFiles.find((fileName) => !annotationTypeFromFileName(fileName))
+    ?? imageFiles[0];
+
+  if (defaultFile) {
+    images.default = playerImagePath(playerName, defaultFile);
+  }
+
+  return images;
+}
+
+function playerImagePath(playerName, fileName) {
+  return `players/${encodeURIComponent(playerName)}/${encodeURIComponent(fileName)}`;
+}
+
+function annotationTypeFromFileName(fileName) {
+  const normalized = normalizePlayerName(fileName.replace(/\.[^.]+$/, ""));
+  const aliases = {
+    brilliant: ["brilliant", "brillant"],
+    excellent: ["excellent"],
+    theory: ["theory", "theorique", "book", "opening"],
+    best: ["best", "meilleur", "greatfind", "great find"],
+    "very-good": ["very good", "verygood", "tres bien", "tresbien"],
+    good: ["good", "bon"],
+    inaccuracy: ["inaccuracy", "imprecision"],
+    mistake: ["mistake", "erreur"],
+    miss: ["miss", "manque"],
+    blunder: ["blunder", "gaffe"]
+  };
+
+  return Object.entries(aliases)
+    .find(([, words]) => words.some((word) => normalized.includes(word)))?.[0] ?? "";
 }
 
 function updatePlayerPortraits(source) {
@@ -1059,16 +1105,18 @@ function updatePlayerPortraits(source) {
 
   const white = playerImageForName(pgnTagValue(source, "White"));
   const black = playerImageForName(pgnTagValue(source, "Black"));
-  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerName, white);
-  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerName, black);
+  const moveAnnotation = currentMoveIndex > 0 ? moveAnnotations.get(currentMoveIndex) : null;
+  const moveColor = timeline[currentMoveIndex]?.move?.color;
+  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerName, white, moveColor === "w" ? moveAnnotation?.type : "");
+  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerName, black, moveColor === "b" ? moveAnnotation?.type : "");
   playerPortraits.hidden = !white && !black;
 }
 
-function updatePlayerPortrait(container, image, label, player) {
+function updatePlayerPortrait(container, image, label, player, annotationType = "") {
   container.hidden = !player;
   if (!player) return;
 
-  image.src = player.image;
+  image.src = player.images[annotationType] ?? player.images.default;
   image.alt = `Portrait de ${player.name}`;
   label.textContent = player.name;
 }
@@ -1498,6 +1546,7 @@ function showTimelinePosition(index) {
   }
   updateMovePlayer(entry);
   updateAnnotationPanel();
+  updatePlayerPortraits(pgnInput.value.trim());
   playMoveSound(entry, previousMoveIndex);
 }
 
@@ -1527,6 +1576,7 @@ function updateCurrentAnnotation(patch) {
   updateAnnotationPanel();
   updateAnnotatedPgn();
   updateAnnotationBubble();
+  updatePlayerPortraits(pgnInput.value.trim());
 }
 
 function updateAnnotationPanel() {
