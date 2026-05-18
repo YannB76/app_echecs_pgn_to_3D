@@ -1,0 +1,61 @@
+[Event Immortal Game]
+[Site London ENG]
+[Date 1851.06.21]
+[Round ]
+[White Adolf Anderssen]
+[Black Lionel Kieseritzky]
+[Result 1-0]
+[Link httpswww.chess.comanalysisgamepgn3eWq3Dx6yLanalysismove=42]
+
+1. e4 e5 2. f4 exf4 3. Bc4 Qh4+ 4. Kf1 b5 $2 {[%c_effect
+b5;square;b5;type;Mistake;size;100%252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+5. Bxb5 Nf6 6. Nf3 Qh6 7. d3 $6 {[%c_effect
+d3;square;d3;type;Inaccuracy;size;100%252525252525252525252525252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+(7. Nc3) 7... Nh5 $2 {[%c_effect
+h5;square;h5;type;Mistake;size;100%252525252525252525252525252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+8. Nh4 $9 {[%c_effect
+h4;square;h4;type;Miss;size;100%25;animated;false;persistent;true]} (8. Rg1)
+8... Qg5 9. Nf5 $1 {[%c_effect
+f5;square;f5;type;GreatFind;size;100%25252525252525252525252525252525252525252525252525252525;animated;true;persistent;true]}
+9... c6 $2 {[%c_effect
+c6;square;c6;type;Mistake;size;100%25252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+10. g4 $4 {[%c_effect
+g4;square;g4;type;Blunder;size;100%252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+(10. g4 $4 {[%c_effect
+g4;square;g4;type;Blunder;size;100%2525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+10... g6 {-0.59} 11. gxh5 {-1.13} 11... gxf5 {-1.29} 12. Rg1 {-1.11} 12... Qh4
+{-1.00} 13. Qf3 {-1.02} 13... cxb5 {-1.10} 14. Bxf4 {-1.27} 14... Bb7 {-1.19}
+15. Nc3 {-1.07} 15... Nc6 {-1.21} 16. Bg5 {-1.39} 16... Nd4 {-1.40} 17. Qe3
+{-1.30} 17... Nxc2 {-1.29} 18. Qf3 {-1.33} 18... Qxh2 {-1.13} 19. Bf4 {-1.14}
+19... Qh4 {-1.31} 20. Bg5 {-1.13} 20... fxe4 {-1.25} 21. dxe4 {-1.23} 21... Qh2
+{-1.23} 22. Nd5 {-0.98} 22... Bxd5 {-1.01} 23. exd5 {-1.18}) 10... Nf6 $9
+{[%c_effect f6;square;f6;type;Miss;size;100%25;animated;false;persistent;true]}
+11. Rg1 cxb5 $2 {[%c_effect
+b5;square;b5;type;Mistake;size;100%25252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+12. h4 $1 {[%c_effect
+h4;square;h4;type;GreatFind;size;100%25252525252525252525252525252525252525252525252525252525;animated;true;persistent;true]}
+12... Qg6 13. h5 $1 {[%c_effect
+h5;square;h5;type;GreatFind;size;100%25252525252525252525252525252525252525252525252525252525;animated;true;persistent;true]}
+13... Qg5 14. Qf3 $1 {[%c_effect
+f3;square;f3;type;GreatFind;size;100%25252525252525252525252525252525252525252525252525252525;animated;true;persistent;true]}
+14... Ng8 $6 {[%c_effect
+g8;square;g8;type;Inaccuracy;size;100%25252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+15. Bxf4 Qf6 16. Nc3 $1 {[%c_effect
+c3;square;c3;type;GreatFind;size;100%25252525252525252525252525252525252525252525252525252525;animated;true;persistent;true]}
+16... Bc5 $6 {[%c_effect
+c5;square;c5;type;Inaccuracy;size;100%25252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+17. Nd5 Qxb2 18. Bd6 $4 {[%c_effect
+d6;square;d6;type;Blunder;size;100%25;animated;false;persistent;true]} 18...
+Bxg1 $9 {[%c_effect
+g1;square;g1;type;Miss;size;100%25;animated;false;persistent;true]} 19. e5 $2
+{[%c_effect
+e5;square;e5;type;Mistake;size;100%252525252525252525252525252525252525252525252525252525;animated;false;persistent;true]}
+19... Qxa1+ 20. Ke2 $1 {[%c_effect
+e2;square;e2;type;GreatFind;size;100%252525252525252525252525252525252525252525252525252525;animated;true;persistent;true]}
+20... Na6 $4 {[%c_effect
+a6;square;a6;type;Blunder;size;100%25;animated;false;persistent;true]} 21. Nxg7+
+Kd8 22. Qf6+ $3 {[%c_effect
+f6;square;f6;type;Brilliant;size;100%25;animated;false;persistent;true]} 22...
+Nxf6 23. Be7# {[%c_effect
+e2;square;e2;type;Winner;animated;true,d8;square;d8;type;CheckmateBlack;animated;true]}
+1-0

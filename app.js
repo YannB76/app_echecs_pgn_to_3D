@@ -87,6 +87,7 @@ const famousGames = [
   {
     id: "immortal",
     label: "Anderssen - Kieseritzky, 1851 - Immortal Game",
+    commentFile: "[Event Immortal Game].txt",
     pgn: `[Event "Immortal Game"]
 [Site "London ENG"]
 [Date "1851.06.21"]
@@ -1162,11 +1163,30 @@ function buildAnnotationChoices() {
   });
 }
 
-function loadSelectedGame(gameId) {
+async function loadSelectedGame(gameId) {
   const game = famousGames.find((entry) => entry.id === gameId) ?? famousGames[0];
   gameLibrary.value = game.id;
-  pgnInput.value = game.pgn;
+  pgnInput.value = await loadGamePgn(game);
   renderCurrentInput();
+}
+
+async function loadGamePgn(game) {
+  if (!game.commentFile) return game.pgn;
+
+  try {
+    const response = await fetch(`pgn_comments/${encodeURIComponent(game.commentFile)}`);
+    if (!response.ok) return game.pgn;
+    return normalizePgnText(await response.text());
+  } catch (error) {
+    return game.pgn;
+  }
+}
+
+function normalizePgnText(source) {
+  return source.replace(/^\[([A-Za-z0-9_]+)\s+([^\]"]*)\]$/gm, (line, tag, value) => {
+    const cleanValue = value.trim() || "?";
+    return `[${tag} "${cleanValue.replace(/"/g, "'")}"]`;
+  });
 }
 
 async function initializeDefaultGame() {
@@ -1182,7 +1202,7 @@ async function initializeDefaultGame() {
     setStatus("Modeles OBJ indisponibles. Pieces stylisees chargees.", true);
   } finally {
     pieceThemeSelect.disabled = false;
-    loadSelectedGame("immortal");
+    await loadSelectedGame("immortal");
   }
 }
 
