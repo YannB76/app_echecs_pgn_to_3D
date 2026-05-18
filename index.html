@@ -122,13 +122,21 @@
               <h3>Themes</h3>
               <label class="select-row">
                 <span>Pieces</span>
-                <select id="pieceTheme">
-                  <option value="ornate">OBJ detaille</option>
-                  <option value="classic">OBJ classique</option>
-                  <option value="code">Style code</option>
-                </select>
-              </label>
-            </section>
+              <select id="pieceTheme">
+                <option value="ornate">OBJ detaille</option>
+                <option value="classic">OBJ classique</option>
+                <option value="code">Style code</option>
+              </select>
+            </label>
+            <div class="setting-row">
+              <span>Cases claires</span>
+              <input id="lightSquareColor" type="color" value="#dcc9a3" aria-label="Couleur des cases claires" />
+            </div>
+            <div class="setting-row">
+              <span>Cases foncees</span>
+              <input id="darkSquareColor" type="color" value="#6e5437" aria-label="Couleur des cases foncees" />
+            </div>
+          </section>
 
             <section class="option-group" data-panel="display" aria-label="Options d'affichage">
               <h3>Affichage</h3>

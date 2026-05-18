@@ -29,6 +29,8 @@ const previousMoveButton = document.querySelector("#previousMove");
 const nextMoveButton = document.querySelector("#nextMove");
 const lastMoveButton = document.querySelector("#lastMove");
 const pieceThemeSelect = document.querySelector("#pieceTheme");
+const lightSquareColorInput = document.querySelector("#lightSquareColor");
+const darkSquareColorInput = document.querySelector("#darkSquareColor");
 const backgroundColorInput = document.querySelector("#backgroundColor");
 const pieceScaleInput = document.querySelector("#pieceScale");
 const pieceScaleLabel = document.querySelector("#pieceScaleLabel");
@@ -409,6 +411,14 @@ pieceThemeSelect.addEventListener("change", async () => {
     pieceThemeSelect.disabled = false;
     renderFen(timeline[currentMoveIndex].fen, { moveCount: currentMoveIndex });
   }
+});
+
+lightSquareColorInput.addEventListener("input", () => {
+  lightSquare.color.set(lightSquareColorInput.value);
+});
+
+darkSquareColorInput.addEventListener("input", () => {
+  darkSquare.color.set(darkSquareColorInput.value);
 });
 
 lightIntensityInput.addEventListener("input", () => {
