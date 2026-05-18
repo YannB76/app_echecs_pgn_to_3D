@@ -786,27 +786,16 @@ function createAnnotationBubble(type) {
   const context = canvas.getContext("2d");
 
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = "rgba(17, 20, 23, 0.92)";
-  roundRect(context, 28, 16, 200, 146, 24);
-  context.fill();
-
-  context.beginPath();
-  context.moveTo(118, 158);
-  context.lineTo(138, 158);
-  context.lineTo(128, 192);
-  context.closePath();
-  context.fill();
-
   context.fillStyle = type.color;
   context.beginPath();
-  context.arc(128, 82, 52, 0, Math.PI * 2);
+  context.arc(128, 110, 82, 0, Math.PI * 2);
   context.fill();
 
   context.fillStyle = "#17201b";
-  context.font = "900 50px Inter, Arial, sans-serif";
+  context.font = "900 78px Inter, Arial, sans-serif";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(type.icon, 128, 84);
+  context.fillText(type.icon, 128, 113);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -817,22 +806,8 @@ function createAnnotationBubble(type) {
     depthWrite: false
   });
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(0.9, 0.78, 1);
+  sprite.scale.set(1.1, 1.1, 1);
   return sprite;
-}
-
-function roundRect(context, x, y, width, height, radius) {
-  context.beginPath();
-  context.moveTo(x + radius, y);
-  context.lineTo(x + width - radius, y);
-  context.quadraticCurveTo(x + width, y, x + width, y + radius);
-  context.lineTo(x + width, y + height - radius);
-  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-  context.lineTo(x + radius, y + height);
-  context.quadraticCurveTo(x, y + height, x, y + height - radius);
-  context.lineTo(x, y + radius);
-  context.quadraticCurveTo(x, y, x + radius, y);
-  context.closePath();
 }
 
 function updateAnnotatedPgn() {
@@ -907,9 +882,11 @@ function animateTimelineStep(fromEntry, toEntry, isForward) {
   const start = squareToPosition(movingFrom);
   const end = squareToPosition(movingTo);
   movingPiece.position.copy(start);
+  const movingAnnotationBubble = createMovingAnnotationBubble(move, movingFrom);
 
   activeAnimation = {
     movingPiece,
+    movingAnnotationBubble,
     capturedPiece,
     start,
     end,
@@ -918,6 +895,22 @@ function animateTimelineStep(fromEntry, toEntry, isForward) {
     finalFen: toEntry.fen,
     finalMoveCount: currentMoveIndex
   };
+}
+
+function createMovingAnnotationBubble(move, movingFrom) {
+  const annotationIndex = currentMoveIndex;
+  const annotation = moveAnnotations.get(annotationIndex);
+  if (!annotation?.type) return null;
+
+  const type = annotationTypes.find((entry) => entry.id === annotation.type);
+  if (!type) return null;
+
+  const bubble = createAnnotationBubble(type);
+  const position = squareToPosition(movingFrom);
+  bubble.position.set(position.x, 2.15, position.z);
+  bubble.userData.annotationBubble = true;
+  pieceMeshes.add(bubble);
+  return bubble;
 }
 
 function getMoveAnimationDuration(move) {
@@ -934,6 +927,12 @@ function updateActiveAnimation() {
   const eased = easeInOutCubic(progress);
   activeAnimation.movingPiece.position.lerpVectors(activeAnimation.start, activeAnimation.end, eased);
   activeAnimation.movingPiece.position.y = 0.08 + Math.sin(progress * Math.PI) * 0.42;
+
+  if (activeAnimation.movingAnnotationBubble) {
+    activeAnimation.movingAnnotationBubble.position.x = activeAnimation.movingPiece.position.x;
+    activeAnimation.movingAnnotationBubble.position.z = activeAnimation.movingPiece.position.z;
+    activeAnimation.movingAnnotationBubble.position.y = activeAnimation.movingPiece.position.y + 2.07;
+  }
 
   if (activeAnimation.capturedPiece) {
     const scale = 1 - eased * 0.75;
