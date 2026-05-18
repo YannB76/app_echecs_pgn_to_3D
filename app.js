@@ -163,7 +163,7 @@ let timeline = [{ fen: lastFen, label: "Depart" }];
 let currentMoveIndex = 0;
 let moveAnnotations = new Map();
 let soundEnabled = true;
-let soundVolume = 0.75;
+let soundVolume = 1;
 let soundTheme = "wood";
 let audioContext = null;
 let activeAnimation = null;
@@ -229,9 +229,9 @@ const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf1efe7, roughness: 0.
 const blackMat = new THREE.MeshStandardMaterial({ color: 0x24282d, roughness: 0.5, metalness: 0.16 });
 const goldMat = new THREE.MeshStandardMaterial({ color: 0xd7a94b, roughness: 0.44, metalness: 0.22 });
 const soundThemes = {
-  wood: { type: "triangle", frequencyRatio: 1, gainRatio: 1, durationRatio: 1 },
-  crystal: { type: "sine", frequencyRatio: 1.45, gainRatio: 0.85, durationRatio: 0.82 },
-  arcade: { type: "square", frequencyRatio: 0.72, gainRatio: 0.58, durationRatio: 1.15 }
+  wood: { type: "triangle", frequencyRatio: 1, gainRatio: 1.65, durationRatio: 1 },
+  crystal: { type: "sine", frequencyRatio: 1.45, gainRatio: 1.35, durationRatio: 0.82 },
+  arcade: { type: "square", frequencyRatio: 0.72, gainRatio: 0.95, durationRatio: 1.15 }
 };
 const pieceModelThemes = {
   ornate: {
