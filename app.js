@@ -73,6 +73,17 @@ const soundEnabledInput = document.querySelector("#soundEnabled");
 const soundVolumeInput = document.querySelector("#soundVolume");
 const soundVolumeLabel = document.querySelector("#soundVolumeLabel");
 const soundThemeSelect = document.querySelector("#soundTheme");
+const cameraXOutput = document.querySelector("#cameraX");
+const cameraYOutput = document.querySelector("#cameraY");
+const cameraZOutput = document.querySelector("#cameraZ");
+const targetXOutput = document.querySelector("#targetX");
+const targetYOutput = document.querySelector("#targetY");
+const targetZOutput = document.querySelector("#targetZ");
+const cameraDistanceOutput = document.querySelector("#cameraDistance");
+const saveCameraViewButton = document.querySelector("#saveCameraView");
+const applySavedCameraViewButton = document.querySelector("#applySavedCameraView");
+const clearSavedCameraViewButton = document.querySelector("#clearSavedCameraView");
+const cameraSavedStatus = document.querySelector("#cameraSavedStatus");
 const musicTrackSelect = document.querySelector("#musicTrack");
 const musicPlayPauseButton = document.querySelector("#musicPlayPause");
 const musicStopButton = document.querySelector("#musicStop");
@@ -199,6 +210,7 @@ let audioContext = null;
 const musicPlayer = new Audio();
 let musicAutoplayPending = true;
 let activeAnimation = null;
+let lastCameraPanelUpdate = 0;
 let realModelsLoading = false;
 let pieceScale = 0.8;
 let shadowIntensity = 1;
@@ -224,7 +236,12 @@ const defaultPortraitSettings = {
   black: { x: 83, y: 35, size: 180 }
 };
 const portraitSettingsVersion = "cafe-regence-2";
+const defaultCameraView = {
+  position: { x: 0, y: 6.4, z: -8.4 },
+  target: { x: 0, y: 0, z: 0 }
+};
 let portraitSettings = loadPortraitSettings();
+let savedCameraView = loadSavedCameraView();
 musicPlayer.loop = true;
 musicPlayer.volume = musicVolume;
 
@@ -238,7 +255,7 @@ applyPortraitSettings();
 loadBackgroundImage(selectedBackgroundImage);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-camera.position.set(0, 6.4, -8.4);
+camera.position.set(defaultCameraView.position.x, defaultCameraView.position.y, defaultCameraView.position.z);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -247,10 +264,14 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.target.set(0, 0, 0);
+controls.target.set(defaultCameraView.target.x, defaultCameraView.target.y, defaultCameraView.target.z);
 controls.minDistance = 5;
 controls.maxDistance = 15;
 controls.maxPolarAngle = Math.PI * 0.48;
+if (savedCameraView) {
+  applyCameraView(savedCameraView);
+}
+updateCameraViewPanel();
 
 const ambient = new THREE.HemisphereLight(0xf5efe0, 0x38414a, 2.2);
 scene.add(ambient);
@@ -511,9 +532,25 @@ resetPortraitsButton.addEventListener("click", () => {
 });
 
 document.querySelector("#resetCamera").addEventListener("click", () => {
-  camera.position.set(0, 6.4, -8.4);
-  controls.target.set(0, 0, 0);
-  controls.update();
+  applyCameraView(defaultCameraView);
+});
+
+saveCameraViewButton.addEventListener("click", () => {
+  savedCameraView = currentCameraView();
+  localStorage.setItem("pgn3dCameraView", JSON.stringify(savedCameraView));
+  updateCameraViewPanel();
+});
+
+applySavedCameraViewButton.addEventListener("click", () => {
+  if (savedCameraView) {
+    applyCameraView(savedCameraView);
+  }
+});
+
+clearSavedCameraViewButton.addEventListener("click", () => {
+  savedCameraView = null;
+  localStorage.removeItem("pgn3dCameraView");
+  updateCameraViewPanel();
 });
 
 backgroundModeSelect.addEventListener("change", applyBackground);
@@ -1111,6 +1148,73 @@ function applySinglePortraitSettings(color, element, controls, labels) {
   element.style.setProperty("--portrait-x", `${settings.x}%`);
   element.style.setProperty("--portrait-y", `${settings.y}%`);
   element.style.setProperty("--portrait-size", `${settings.size / 100}`);
+}
+
+function loadSavedCameraView() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("pgn3dCameraView") ?? "null");
+    if (!saved?.position || !saved?.target) return null;
+    return {
+      position: vectorFromSavedValue(saved.position, defaultCameraView.position),
+      target: vectorFromSavedValue(saved.target, defaultCameraView.target)
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+function vectorFromSavedValue(value, fallback) {
+  return {
+    x: Number.isFinite(Number(value.x)) ? Number(value.x) : fallback.x,
+    y: Number.isFinite(Number(value.y)) ? Number(value.y) : fallback.y,
+    z: Number.isFinite(Number(value.z)) ? Number(value.z) : fallback.z
+  };
+}
+
+function currentCameraView() {
+  return {
+    position: {
+      x: roundViewValue(camera.position.x),
+      y: roundViewValue(camera.position.y),
+      z: roundViewValue(camera.position.z)
+    },
+    target: {
+      x: roundViewValue(controls.target.x),
+      y: roundViewValue(controls.target.y),
+      z: roundViewValue(controls.target.z)
+    }
+  };
+}
+
+function applyCameraView(view) {
+  camera.position.set(view.position.x, view.position.y, view.position.z);
+  controls.target.set(view.target.x, view.target.y, view.target.z);
+  controls.update();
+  updateCameraViewPanel();
+}
+
+function updateCameraViewPanel() {
+  const view = currentCameraView();
+  cameraXOutput.value = formatViewValue(view.position.x);
+  cameraYOutput.value = formatViewValue(view.position.y);
+  cameraZOutput.value = formatViewValue(view.position.z);
+  targetXOutput.value = formatViewValue(view.target.x);
+  targetYOutput.value = formatViewValue(view.target.y);
+  targetZOutput.value = formatViewValue(view.target.z);
+  cameraDistanceOutput.value = formatViewValue(camera.position.distanceTo(controls.target));
+  applySavedCameraViewButton.disabled = !savedCameraView;
+  clearSavedCameraViewButton.disabled = !savedCameraView;
+  cameraSavedStatus.textContent = savedCameraView
+    ? `Vue sauvegardee : camera (${formatViewValue(savedCameraView.position.x)}, ${formatViewValue(savedCameraView.position.y)}, ${formatViewValue(savedCameraView.position.z)})`
+    : "Aucune vue sauvegardee.";
+}
+
+function roundViewValue(value) {
+  return Math.round(value * 1000) / 1000;
+}
+
+function formatViewValue(value) {
+  return Number(value).toFixed(2);
 }
 
 function playerImageForName(playerName) {
@@ -1923,6 +2027,11 @@ function resize() {
 function animate() {
   updateActiveAnimation();
   controls.update();
+  const now = performance.now();
+  if (now - lastCameraPanelUpdate > 250) {
+    updateCameraViewPanel();
+    lastCameraPanelUpdate = now;
+  }
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }

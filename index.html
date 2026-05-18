@@ -132,6 +132,7 @@
             <button class="option-tab active" type="button" data-tab="themes">Themes</button>
             <button class="option-tab" type="button" data-tab="display">Affichage</button>
             <button class="option-tab" type="button" data-tab="portraits">Portraits</button>
+            <button class="option-tab" type="button" data-tab="camera">Camera</button>
             <button class="option-tab" type="button" data-tab="lighting">Eclairage</button>
             <button class="option-tab" type="button" data-tab="gameplay">Gameplay</button>
             <button class="option-tab" type="button" data-tab="audio">Audio</button>
@@ -234,6 +235,47 @@
               <div class="button-row">
                 <button id="resetPortraits" type="button">Reinitialiser les portraits</button>
               </div>
+            </section>
+
+            <section class="option-group" data-panel="camera" aria-label="Options de camera">
+              <h3>Camera</h3>
+              <h4>Position actuelle</h4>
+              <div class="camera-grid">
+                <label>
+                  <span>Camera X</span>
+                  <output id="cameraX">0.00</output>
+                </label>
+                <label>
+                  <span>Camera Y</span>
+                  <output id="cameraY">0.00</output>
+                </label>
+                <label>
+                  <span>Camera Z</span>
+                  <output id="cameraZ">0.00</output>
+                </label>
+                <label>
+                  <span>Cible X</span>
+                  <output id="targetX">0.00</output>
+                </label>
+                <label>
+                  <span>Cible Y</span>
+                  <output id="targetY">0.00</output>
+                </label>
+                <label>
+                  <span>Cible Z</span>
+                  <output id="targetZ">0.00</output>
+                </label>
+                <label>
+                  <span>Distance</span>
+                  <output id="cameraDistance">0.00</output>
+                </label>
+              </div>
+              <div class="button-row">
+                <button id="saveCameraView" type="button">Sauvegarder la vue</button>
+                <button id="applySavedCameraView" type="button">Appliquer</button>
+                <button id="clearSavedCameraView" type="button">Effacer</button>
+              </div>
+              <p id="cameraSavedStatus" class="hint">Aucune vue sauvegardee.</p>
             </section>
 
             <section class="option-group" data-panel="lighting" aria-label="Options d'eclairage">

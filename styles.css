@@ -461,6 +461,33 @@ input[type="range"] {
   line-height: 1.35;
 }
 
+.camera-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.camera-grid label {
+  display: grid;
+  gap: .25rem;
+  padding: .65rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--panel), black 10%);
+}
+
+.camera-grid span {
+  color: var(--muted);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.camera-grid output {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
 .options-overlay {
   position: fixed;
   z-index: 20;
