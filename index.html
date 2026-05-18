@@ -149,8 +149,15 @@
 
             <section class="option-group" data-panel="display" aria-label="Options d'affichage">
               <h3>Affichage</h3>
-              <div class="setting-row">
+              <label class="select-row">
                 <span>Arriere-plan</span>
+                <select id="backgroundMode">
+                  <option value="image">Image</option>
+                  <option value="color">Couleur unie</option>
+                </select>
+              </label>
+              <div class="setting-row">
+                <span>Couleur</span>
                 <input id="backgroundColor" type="color" value="#37a072" aria-label="Couleur de l'arriere-plan" />
               </div>
               <div class="setting-row slider-setting">

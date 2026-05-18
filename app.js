@@ -33,6 +33,7 @@ const lastMoveButton = document.querySelector("#lastMove");
 const pieceThemeSelect = document.querySelector("#pieceTheme");
 const lightSquareColorInput = document.querySelector("#lightSquareColor");
 const darkSquareColorInput = document.querySelector("#darkSquareColor");
+const backgroundModeSelect = document.querySelector("#backgroundMode");
 const backgroundColorInput = document.querySelector("#backgroundColor");
 const pieceScaleInput = document.querySelector("#pieceScale");
 const pieceScaleLabel = document.querySelector("#pieceScaleLabel");
@@ -170,6 +171,7 @@ let moveAnimationsEnabled = true;
 let animationSpeed = 1;
 let randomAnimationSpeed = false;
 let selectedPieceTheme = "ornate";
+let backgroundImageTexture = null;
 const loadedModelThemes = new Map();
 
 const scene = new THREE.Scene();
@@ -179,11 +181,13 @@ backgroundTextureLoader.load(
   "images/bd5835a3-49d6-442d-ad70-be464ae4dc6c.png",
   (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace;
-    scene.background = texture;
+    backgroundImageTexture = texture;
+    applyBackground();
   },
   undefined,
   () => {
-    scene.background = new THREE.Color(backgroundColorInput.value);
+    backgroundModeSelect.value = "color";
+    applyBackground();
   }
 );
 
@@ -394,9 +398,14 @@ document.querySelector("#resetCamera").addEventListener("click", () => {
   controls.update();
 });
 
-backgroundColorInput.addEventListener("input", () => {
-  scene.background = new THREE.Color(backgroundColorInput.value);
-});
+backgroundModeSelect.addEventListener("change", applyBackground);
+backgroundColorInput.addEventListener("input", applyBackground);
+
+function applyBackground() {
+  scene.background = backgroundModeSelect.value === "image" && backgroundImageTexture
+    ? backgroundImageTexture
+    : new THREE.Color(backgroundColorInput.value);
+}
 
 pieceScaleInput.addEventListener("input", () => {
   pieceScale = Number(pieceScaleInput.value) / 100;
