@@ -24,6 +24,8 @@ const closeOptionsButton = document.querySelector("#closeOptions");
 const optionsOverlay = document.querySelector("#optionsOverlay");
 const optionTabs = document.querySelectorAll(".option-tab");
 const optionPanels = document.querySelectorAll("[data-panel]");
+const sideTabs = document.querySelectorAll(".side-tab");
+const sidePanels = document.querySelectorAll("[data-side-panel]");
 const firstMoveButton = document.querySelector("#firstMove");
 const previousMoveButton = document.querySelector("#previousMove");
 const nextMoveButton = document.querySelector("#nextMove");
@@ -345,6 +347,10 @@ optionTabs.forEach((tab) => {
   tab.addEventListener("click", () => activateOptionTab(tab.dataset.tab));
 });
 
+sideTabs.forEach((tab) => {
+  tab.addEventListener("click", () => activateSideTab(tab.dataset.sideTab));
+});
+
 document.querySelector("#flipBoard").addEventListener("click", () => {
   flipped = !flipped;
   boardGroup.rotation.y = flipped ? Math.PI : 0;
@@ -566,6 +572,15 @@ function activateOptionTab(tabName) {
   });
   optionPanels.forEach((panel) => {
     panel.classList.toggle("active", panel.dataset.panel === tabName);
+  });
+}
+
+function activateSideTab(tabName) {
+  sideTabs.forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.sideTab === tabName);
+  });
+  sidePanels.forEach((panel) => {
+    panel.classList.toggle("active", panel.dataset.sidePanel === tabName);
   });
 }
 

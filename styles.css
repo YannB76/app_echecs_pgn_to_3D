@@ -17,7 +17,8 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: radial-gradient(circle at 80% 20%, #2c343a 0, #15181b 38rem);
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -33,7 +34,8 @@ select {
 .app-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .workspace {
@@ -111,11 +113,13 @@ button:disabled:hover {
 }
 
 .control-panel {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(0, auto) minmax(15rem, 1fr);
   gap: 1rem;
   min-width: 0;
+  min-height: 0;
   padding: 1rem;
+  overflow: hidden;
   background: color-mix(in srgb, var(--panel), black 10%);
   border-left: 1px solid var(--line);
 }
@@ -145,7 +149,8 @@ select {
 }
 
 textarea {
-  min-height: 24rem;
+  min-height: 13rem;
+  max-height: 22vh;
   resize: vertical;
   padding: .85rem;
   line-height: 1.45;
@@ -210,6 +215,10 @@ input[type="range"] {
 }
 
 .annotation-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(5rem, 1fr) auto auto;
+  gap: .7rem;
+  min-height: 0;
   padding: .75rem;
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -223,7 +232,9 @@ input[type="range"] {
 .annotation-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
   gap: .45rem;
+  overflow: auto;
 }
 
 .annotation-choice {
@@ -255,12 +266,62 @@ input[type="range"] {
 
 .comment-textarea,
 .annotated-pgn {
-  min-height: 5.4rem;
+  min-height: 4.5rem;
+  max-height: none;
+  resize: none;
   white-space: pre-wrap;
 }
 
 .annotated-pgn {
-  min-height: 8rem;
+  min-height: 0;
+  height: 100%;
+  resize: none;
+}
+
+.side-tabs {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: .65rem;
+}
+
+.side-tab-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.side-tab {
+  min-width: 0;
+  padding: 0 .45rem;
+}
+
+.side-tab.active {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.side-panel {
+  min-height: 0;
+  display: none;
+  overflow: hidden;
+}
+
+.side-panel.active {
+  display: grid;
+  gap: .7rem;
+}
+
+.side-panel[data-side-panel="comments"].active {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.side-panel[data-side-panel="export"].active {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.side-panel[data-side-panel="info"].active {
+  align-content: start;
 }
 
 .setting-row {
@@ -421,6 +482,13 @@ input[type="range"] {
 }
 
 @media (max-width: 900px) {
+  body,
+  .app-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
   }

@@ -66,37 +66,46 @@
           <p id="status" role="status">Pret.</p>
         </div>
 
-        <div class="panel-section annotation-panel">
-          <label>Commentaire du coup</label>
-          <div class="annotation-current" id="annotationCurrent">Position initiale</div>
-          <div class="annotation-grid" id="annotationChoices" aria-label="Evaluation du coup"></div>
-          <textarea id="moveComment" class="comment-textarea" placeholder="Ajouter un commentaire pour ce coup..."></textarea>
-          <button id="clearComment" type="button">Effacer ce commentaire</button>
-        </div>
-
-        <div class="panel-section">
-          <label for="annotatedPgn">PGN commente</label>
-          <textarea id="annotatedPgn" class="annotated-pgn" readonly></textarea>
-        </div>
-
-        <div class="panel-section">
-          <label for="fenOutput">FEN finale</label>
-          <input id="fenOutput" readonly value="" />
-        </div>
-
-        <div class="panel-section compact">
-          <div>
-            <span class="metric-label">Trait</span>
-            <strong id="turnMetric">Blancs</strong>
+        <div class="side-tabs">
+          <div class="side-tab-buttons" aria-label="Panneaux lateraux">
+            <button class="side-tab active" type="button" data-side-tab="comments">Commentaires</button>
+            <button class="side-tab" type="button" data-side-tab="export">Export</button>
+            <button class="side-tab" type="button" data-side-tab="info">Infos</button>
           </div>
-          <div>
-            <span class="metric-label">Coups joues</span>
-            <strong id="moveMetric">0</strong>
-          </div>
-          <div>
-            <span class="metric-label">Pieces</span>
-            <strong id="pieceMetric">32</strong>
-          </div>
+
+          <section class="side-panel active" data-side-panel="comments" aria-label="Commentaires du coup">
+            <div class="annotation-panel">
+              <label>Commentaire du coup</label>
+              <div class="annotation-current" id="annotationCurrent">Position initiale</div>
+              <div class="annotation-grid" id="annotationChoices" aria-label="Evaluation du coup"></div>
+              <textarea id="moveComment" class="comment-textarea" placeholder="Ajouter un commentaire pour ce coup..."></textarea>
+              <button id="clearComment" type="button">Effacer ce commentaire</button>
+            </div>
+          </section>
+
+          <section class="side-panel" data-side-panel="export" aria-label="PGN commente">
+            <label for="annotatedPgn">PGN commente</label>
+            <textarea id="annotatedPgn" class="annotated-pgn" readonly></textarea>
+          </section>
+
+          <section class="side-panel" data-side-panel="info" aria-label="Informations de position">
+            <label for="fenOutput">FEN finale</label>
+            <input id="fenOutput" readonly value="" />
+            <div class="compact">
+              <div>
+                <span class="metric-label">Trait</span>
+                <strong id="turnMetric">Blancs</strong>
+              </div>
+              <div>
+                <span class="metric-label">Coups joues</span>
+                <strong id="moveMetric">0</strong>
+              </div>
+              <div>
+                <span class="metric-label">Pieces</span>
+                <strong id="pieceMetric">32</strong>
+              </div>
+            </div>
+          </section>
         </div>
       </aside>
     </main>
