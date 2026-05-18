@@ -196,6 +196,7 @@ let musicVolume = 0.35;
 let selectedMusicTrack = "";
 let audioContext = null;
 const musicPlayer = new Audio();
+let musicAutoplayPending = true;
 let activeAnimation = null;
 let realModelsLoading = false;
 let pieceScale = 0.8;
@@ -205,10 +206,11 @@ let moveAnimationsEnabled = true;
 let animationSpeed = 1;
 let randomAnimationSpeed = false;
 let selectedPieceTheme = "ornate";
-let selectedBackgroundImage = "bibliotheque-bois-soleil.png";
+let selectedBackgroundImage = "cafe-de-la-regence2.png";
 let blackPieceBaseColor = "#24282d";
 let blackPieceLightness = 1;
 const defaultBackgroundImages = [
+  "cafe-de-la-regence2.png",
   "bibliotheque-bois-soleil.png",
   "salon-moderne-lac.png",
   "grande-salle-medievale.png"
@@ -217,9 +219,10 @@ const backgroundImageTextures = new Map();
 const loadedModelThemes = new Map();
 const playerImagesByName = new Map();
 const defaultPortraitSettings = {
-  white: { x: 11, y: 50, size: 100 },
-  black: { x: 69, y: 38, size: 100 }
+  white: { x: 15, y: 35, size: 180 },
+  black: { x: 83, y: 35, size: 180 }
 };
+const portraitSettingsVersion = "cafe-regence-2";
 let portraitSettings = loadPortraitSettings();
 musicPlayer.loop = true;
 musicPlayer.volume = musicVolume;
@@ -482,6 +485,8 @@ musicPlayer.addEventListener("ended", () => {
   updateMusicStatus("Musique terminee.");
   updateMusicButtons();
 });
+document.addEventListener("pointerdown", requestMusicAutoplay, { once: true });
+document.addEventListener("keydown", requestMusicAutoplay, { once: true });
 
 [
   whitePortraitXInput,
@@ -635,6 +640,7 @@ function populateMusicTrackSelect(trackFiles) {
   musicTrackSelect.value = selectedMusicTrack;
   loadMusicTrack(selectedMusicTrack);
   updateMusicStatus(`${trackFiles.length} morceau${trackFiles.length > 1 ? "x" : ""} disponible${trackFiles.length > 1 ? "s" : ""}.`);
+  requestMusicAutoplay();
 }
 
 function loadMusicTrack(fileName) {
@@ -643,6 +649,20 @@ function loadMusicTrack(fileName) {
   selectedMusicTrack = fileName;
   musicPlayer.src = fileName ? `music/${encodeURIComponent(fileName)}` : "";
   musicPlayer.load();
+  updateMusicButtons();
+}
+
+async function requestMusicAutoplay() {
+  if (!musicAutoplayPending || !selectedMusicTrack) return;
+
+  try {
+    await musicPlayer.play();
+    musicAutoplayPending = false;
+    updateMusicStatus("Musique en cours.");
+  } catch (error) {
+    updateMusicStatus("Lecture automatique en attente d'un clic.");
+  }
+
   updateMusicButtons();
 }
 
@@ -1018,6 +1038,9 @@ function updatePlayerPortrait(container, image, label, player) {
 function loadPortraitSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem("pgn3dPortraitSettings") ?? "{}");
+    if (saved.version !== portraitSettingsVersion) {
+      return structuredClone(defaultPortraitSettings);
+    }
     return {
       white: {
         ...defaultPortraitSettings.white,
@@ -1034,7 +1057,10 @@ function loadPortraitSettings() {
 }
 
 function savePortraitSettings() {
-  localStorage.setItem("pgn3dPortraitSettings", JSON.stringify(portraitSettings));
+  localStorage.setItem("pgn3dPortraitSettings", JSON.stringify({
+    version: portraitSettingsVersion,
+    ...portraitSettings
+  }));
 }
 
 function readPortraitSettingsFromControls() {
