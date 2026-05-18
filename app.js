@@ -210,7 +210,6 @@ let musicVolume = 0.35;
 let selectedMusicTrack = "";
 let audioContext = null;
 const musicPlayer = new Audio();
-let musicAutoplayPending = true;
 let activeAnimation = null;
 let lastCameraPanelUpdate = 0;
 let realModelsLoading = false;
@@ -511,8 +510,6 @@ musicPlayer.addEventListener("ended", () => {
   updateMusicStatus("Musique terminee.");
   updateMusicButtons();
 });
-document.addEventListener("pointerdown", requestMusicAutoplay, { once: true });
-document.addEventListener("keydown", requestMusicAutoplay, { once: true });
 
 [
   whitePortraitXInput,
@@ -681,8 +678,7 @@ function populateMusicTrackSelect(trackFiles) {
   selectedMusicTrack = trackFiles.includes(currentValue) ? currentValue : trackFiles[0];
   musicTrackSelect.value = selectedMusicTrack;
   loadMusicTrack(selectedMusicTrack);
-  updateMusicStatus(`${trackFiles.length} morceau${trackFiles.length > 1 ? "x" : ""} disponible${trackFiles.length > 1 ? "s" : ""}.`);
-  requestMusicAutoplay();
+  updateMusicStatus(`${trackFiles.length} morceau${trackFiles.length > 1 ? "x" : ""} disponible${trackFiles.length > 1 ? "s" : ""}. Clique sur Lire pour demarrer.`);
 }
 
 function loadMusicTrack(fileName) {
@@ -691,20 +687,6 @@ function loadMusicTrack(fileName) {
   selectedMusicTrack = fileName;
   musicPlayer.src = fileName ? `music/${encodeURIComponent(fileName)}` : "";
   musicPlayer.load();
-  updateMusicButtons();
-}
-
-async function requestMusicAutoplay() {
-  if (!musicAutoplayPending || !selectedMusicTrack) return;
-
-  try {
-    await musicPlayer.play();
-    musicAutoplayPending = false;
-    updateMusicStatus("Musique en cours.");
-  } catch (error) {
-    updateMusicStatus("Lecture automatique en attente d'un clic.");
-  }
-
   updateMusicButtons();
 }
 
