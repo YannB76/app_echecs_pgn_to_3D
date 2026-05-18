@@ -320,7 +320,7 @@ function renderCurrentInput() {
   const source = pgnInput.value.trim();
   try {
     timeline = timelineFromText(source);
-    moveAnnotations = new Map();
+    moveAnnotations = extractPgnAnnotations(source, timeline);
     currentMoveIndex = 0;
     lastFen = timeline[currentMoveIndex].fen;
     lastMoveCount = currentMoveIndex;
@@ -584,6 +584,183 @@ function timelineFromText(source) {
   const cleaned = source.replace(/\r/g, "").trim();
   chess.loadPgn(cleaned, { strict: false });
   return buildTimeline(chess);
+}
+
+function extractPgnAnnotations(source, positions) {
+  if (sourceLooksLikeFen(source) || positions.length <= 1) {
+    return new Map();
+  }
+
+  const annotations = new Map();
+  const body = source
+    .replace(/\r/g, "")
+    .split("\n")
+    .filter((line) => !/^\s*\[[^\]]+\]\s*$/.test(line))
+    .join("\n");
+
+  let token = "";
+  let variationDepth = 0;
+  let timelineIndex = 1;
+  let lastMoveIndex = 0;
+
+  const flushToken = () => {
+    const rawToken = token.trim();
+    token = "";
+    if (!rawToken || variationDepth > 0) return;
+
+    const moveToken = rawToken.replace(/^\d+\.(\.\.)?/, "");
+    if (!moveToken || /^\d+\.(\.\.)?$/.test(rawToken)) return;
+    if (/^(1-0|0-1|1\/2-1\/2|\*)$/.test(moveToken)) return;
+
+    if (/^\$\d+$/.test(moveToken)) {
+      applyImportedAnnotation(annotations, lastMoveIndex, {
+        type: typeFromNag(moveToken)
+      });
+      return;
+    }
+
+    const expected = positions[timelineIndex]?.move?.san;
+    if (expected && normalizeSan(moveToken) === normalizeSan(expected)) {
+      lastMoveIndex = timelineIndex;
+      timelineIndex += 1;
+    }
+  };
+
+  for (let index = 0; index < body.length; index += 1) {
+    const char = body[index];
+
+    if (char === "{") {
+      flushToken();
+      const end = body.indexOf("}", index + 1);
+      const comment = end === -1 ? body.slice(index + 1) : body.slice(index + 1, end);
+      if (variationDepth === 0) {
+        applyImportedAnnotation(annotations, lastMoveIndex, annotationFromComment(comment));
+      }
+      index = end === -1 ? body.length : end;
+      continue;
+    }
+
+    if (char === ";") {
+      flushToken();
+      const end = body.indexOf("\n", index + 1);
+      index = end === -1 ? body.length : end;
+      continue;
+    }
+
+    if (char === "(") {
+      flushToken();
+      variationDepth += 1;
+      continue;
+    }
+
+    if (char === ")") {
+      flushToken();
+      variationDepth = Math.max(0, variationDepth - 1);
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      flushToken();
+      continue;
+    }
+
+    token += char;
+  }
+
+  flushToken();
+  return annotations;
+}
+
+function normalizeSan(value) {
+  return value
+    .replace(/^0-0-0/i, "O-O-O")
+    .replace(/^0-0/i, "O-O")
+    .replace(/[!?]+$/g, "")
+    .trim();
+}
+
+function annotationFromComment(comment) {
+  const chessComTypes = [...comment.matchAll(/type;([^;\]\s,]+)/g)]
+    .map((match) => typeFromChessComEffect(match[1]))
+    .filter(Boolean);
+  const text = comment
+    .replace(/\[%[^\]]+\]/g, "")
+    .replace(/[{}]/g, "")
+    .trim();
+  const cleanText = /^[+-]?\d+(\.\d+)?$/.test(text) ? "" : text;
+
+  return {
+    type: strongestAnnotationType(chessComTypes),
+    text: cleanText
+  };
+}
+
+function applyImportedAnnotation(annotations, moveIndex, patch) {
+  if (!moveIndex || (!patch.type && !patch.text)) return;
+
+  const current = annotations.get(moveIndex) ?? { type: "", text: "" };
+  const next = {
+    type: strongestAnnotationType([current.type, patch.type].filter(Boolean)) || current.type,
+    text: [current.text, patch.text].filter(Boolean).join(" - ")
+  };
+  annotations.set(moveIndex, next);
+}
+
+function strongestAnnotationType(types) {
+  const priority = [
+    "brilliant",
+    "blunder",
+    "mistake",
+    "miss",
+    "inaccuracy",
+    "excellent",
+    "best",
+    "very-good",
+    "good",
+    "theory"
+  ];
+  return priority.find((type) => types.includes(type)) ?? "";
+}
+
+function typeFromNag(nag) {
+  const nagTypes = {
+    "$1": "best",
+    "$2": "mistake",
+    "$3": "brilliant",
+    "$4": "blunder",
+    "$5": "excellent",
+    "$6": "inaccuracy",
+    "$9": "miss",
+    "$10": "good",
+    "$11": "excellent",
+    "$14": "inaccuracy",
+    "$15": "mistake",
+    "$16": "blunder"
+  };
+  return nagTypes[nag] ?? "";
+}
+
+function typeFromChessComEffect(effectType) {
+  const normalized = effectType.toLowerCase();
+  const effectTypes = {
+    brilliant: "brilliant",
+    greatfind: "best",
+    best: "best",
+    bestmove: "best",
+    excellent: "excellent",
+    book: "theory",
+    theory: "theory",
+    good: "good",
+    inaccuracy: "inaccuracy",
+    mistake: "mistake",
+    miss: "miss",
+    missedwin: "miss",
+    blunder: "blunder",
+    winner: "brilliant",
+    checkmateblack: "brilliant",
+    checkmatewhite: "brilliant"
+  };
+  return effectTypes[normalized] ?? "";
 }
 
 function sourceLooksLikeFen(source) {
