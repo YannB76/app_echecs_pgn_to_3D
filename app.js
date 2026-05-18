@@ -9,6 +9,13 @@ const pgnInput = document.querySelector("#pgnInput");
 const fenOutput = document.querySelector("#fenOutput");
 const statusEl = document.querySelector("#status");
 const positionLabel = document.querySelector("#positionLabel");
+const playerPortraits = document.querySelector("#playerPortraits");
+const whitePlayerPortrait = document.querySelector("#whitePlayerPortrait");
+const blackPlayerPortrait = document.querySelector("#blackPlayerPortrait");
+const whitePlayerImage = document.querySelector("#whitePlayerImage");
+const blackPlayerImage = document.querySelector("#blackPlayerImage");
+const whitePlayerName = document.querySelector("#whitePlayerName");
+const blackPlayerName = document.querySelector("#blackPlayerName");
 const turnMetric = document.querySelector("#turnMetric");
 const moveMetric = document.querySelector("#moveMetric");
 const pieceMetric = document.querySelector("#pieceMetric");
@@ -195,6 +202,7 @@ const defaultBackgroundImages = [
 ];
 const backgroundImageTextures = new Map();
 const loadedModelThemes = new Map();
+const playerImagesByName = new Map();
 musicPlayer.loop = true;
 musicPlayer.volume = musicVolume;
 
@@ -203,6 +211,7 @@ scene.background = new THREE.Color(0x37a072);
 const backgroundTextureLoader = new THREE.TextureLoader();
 discoverBackgroundImages();
 discoverMusicTracks();
+discoverPlayerImages();
 loadBackgroundImage(selectedBackgroundImage);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -338,6 +347,7 @@ function renderCurrentInput() {
     lastFen = timeline[currentMoveIndex].fen;
     lastMoveCount = currentMoveIndex;
     showTimelinePosition(currentMoveIndex);
+    updatePlayerPortraits(source);
     updateAnnotatedPgn();
     setStatus(`Rendu genere depuis ${sourceLooksLikeFen(source) ? "FEN" : "PGN"}.`);
   } catch (error) {
@@ -898,6 +908,90 @@ function typeFromChessComEffect(effectType) {
 function sourceLooksLikeFen(source) {
   const firstLine = source.split(/\n/).find(Boolean) || "";
   return firstLine.split(/\s+/).length >= 4 && /^[prnbqkPRNBQK1-8/]+$/.test(firstLine.split(/\s+/)[0]);
+}
+
+async function discoverPlayerImages() {
+  try {
+    const response = await fetch("players/");
+    if (!response.ok) return;
+
+    const html = await response.text();
+    const documentFragment = new DOMParser().parseFromString(html, "text/html");
+    const folders = [...documentFragment.querySelectorAll("a")]
+      .map((link) => decodeURIComponent(link.getAttribute("href") ?? ""))
+      .filter((href) => href.endsWith("/") && !href.startsWith("."))
+      .map((href) => href.replace(/\/$/, ""));
+
+    await Promise.all(folders.map(loadPlayerFolder));
+    updatePlayerPortraits(pgnInput.value.trim());
+  } catch (error) {
+    playerImagesByName.clear();
+    updatePlayerPortraits(pgnInput.value.trim());
+  }
+}
+
+async function loadPlayerFolder(playerName) {
+  try {
+    const response = await fetch(`players/${encodeURIComponent(playerName)}/`);
+    if (!response.ok) return;
+
+    const html = await response.text();
+    const documentFragment = new DOMParser().parseFromString(html, "text/html");
+    const imageFile = [...documentFragment.querySelectorAll("a")]
+      .map((link) => decodeURIComponent(link.getAttribute("href") ?? ""))
+      .map((href) => href.split("/").pop())
+      .find((fileName) => /\.(png|jpe?g|webp|gif)$/i.test(fileName));
+
+    if (imageFile) {
+      playerImagesByName.set(normalizePlayerName(playerName), {
+        name: playerName,
+        image: `players/${encodeURIComponent(playerName)}/${encodeURIComponent(imageFile)}`
+      });
+    }
+  } catch (error) {
+    // A missing player folder should not block the board.
+  }
+}
+
+function updatePlayerPortraits(source) {
+  if (sourceLooksLikeFen(source)) {
+    playerPortraits.hidden = true;
+    return;
+  }
+
+  const white = playerImageForName(pgnTagValue(source, "White"));
+  const black = playerImageForName(pgnTagValue(source, "Black"));
+  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerName, white);
+  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerName, black);
+  playerPortraits.hidden = !white && !black;
+}
+
+function updatePlayerPortrait(container, image, label, player) {
+  container.hidden = !player;
+  if (!player) return;
+
+  image.src = player.image;
+  image.alt = `Portrait de ${player.name}`;
+  label.textContent = player.name;
+}
+
+function playerImageForName(playerName) {
+  return playerName ? playerImagesByName.get(normalizePlayerName(playerName)) : null;
+}
+
+function pgnTagValue(source, tagName) {
+  const escapedTag = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = source.match(new RegExp(`^\\[${escapedTag}\\s+"([^"]+)"\\]`, "m"));
+  return match?.[1] ?? "";
+}
+
+function normalizePlayerName(playerName) {
+  return playerName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 function populateGameLibrary() {
