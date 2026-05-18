@@ -682,6 +682,9 @@ function renderFen(fen, details = {}) {
   turnMetric.textContent = chess.turn() === "w" ? "Blancs" : "Noirs";
   moveMetric.textContent = Math.max(0, details.moveCount ?? 0).toString();
   pieceMetric.textContent = pieces.toString();
+  if (!details.suppressAnnotationBubble) {
+    updateAnnotationBubble();
+  }
 }
 
 function showTimelinePosition(index) {
@@ -727,6 +730,7 @@ function updateCurrentAnnotation(patch) {
 
   updateAnnotationPanel();
   updateAnnotatedPgn();
+  updateAnnotationBubble();
 }
 
 function updateAnnotationPanel() {
@@ -743,6 +747,92 @@ function updateAnnotationPanel() {
     button.disabled = currentMoveIndex === 0;
     button.classList.toggle("active", button.dataset.annotation === annotation.type);
   });
+}
+
+function updateAnnotationBubble() {
+  clearAnnotationBubble();
+  if (currentMoveIndex === 0) return;
+
+  const annotation = moveAnnotations.get(currentMoveIndex);
+  if (!annotation?.type) return;
+
+  const move = timeline[currentMoveIndex]?.move;
+  if (!move?.to) return;
+
+  const type = annotationTypes.find((entry) => entry.id === annotation.type);
+  if (!type) return;
+
+  const bubble = createAnnotationBubble(type);
+  const position = squareToPosition(move.to);
+  bubble.position.set(position.x, 2.15, position.z);
+  bubble.userData.annotationBubble = true;
+  pieceMeshes.add(bubble);
+}
+
+function clearAnnotationBubble() {
+  [...pieceMeshes.children].forEach((child) => {
+    if (child.userData.annotationBubble) {
+      child.material?.map?.dispose?.();
+      child.material?.dispose?.();
+      pieceMeshes.remove(child);
+    }
+  });
+}
+
+function createAnnotationBubble(type) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 220;
+  const context = canvas.getContext("2d");
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "rgba(17, 20, 23, 0.92)";
+  roundRect(context, 28, 16, 200, 146, 24);
+  context.fill();
+
+  context.beginPath();
+  context.moveTo(118, 158);
+  context.lineTo(138, 158);
+  context.lineTo(128, 192);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = type.color;
+  context.beginPath();
+  context.arc(128, 82, 52, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#17201b";
+  context.font = "900 50px Inter, Arial, sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(type.icon, 128, 84);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    depthTest: true,
+    depthWrite: false
+  });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(0.9, 0.78, 1);
+  return sprite;
+}
+
+function roundRect(context, x, y, width, height, radius) {
+  context.beginPath();
+  context.moveTo(x + radius, y);
+  context.lineTo(x + width - radius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + radius);
+  context.lineTo(x + width, y + height - radius);
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  context.lineTo(x + radius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - radius);
+  context.lineTo(x, y + radius);
+  context.quadraticCurveTo(x, y, x + radius, y);
+  context.closePath();
 }
 
 function updateAnnotatedPgn() {
@@ -796,7 +886,7 @@ function animateTimelineStep(fromEntry, toEntry, isForward) {
     return;
   }
 
-  renderFen(isForward ? fromEntry.fen : fromEntry.fen, { moveCount: currentMoveIndex });
+  renderFen(isForward ? fromEntry.fen : fromEntry.fen, { moveCount: currentMoveIndex, suppressAnnotationBubble: true });
   const movingFrom = isForward ? move.from : move.to;
   const movingTo = isForward ? move.to : move.from;
   const movingPiece = findPieceMeshAt(movingFrom);
