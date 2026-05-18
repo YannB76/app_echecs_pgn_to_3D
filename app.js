@@ -1080,6 +1080,7 @@ function playerMedia(playerName, fileName) {
 function annotationTypeFromFileName(fileName) {
   const normalized = normalizePlayerName(fileName.replace(/\.[^.]+$/, ""));
   const aliases = {
+    greeting: ["greeting", "salut", "hello", "start", "debut"],
     victory: ["victory", "victoire", "winner", "win", "gagnant"],
     defeat: ["defeat", "defaite", "loss", "lose", "loser", "perdant"],
     draw: ["draw", "nul", "nulle"],
@@ -1110,9 +1111,16 @@ function updatePlayerPortraits(source) {
   const moveAnnotation = currentMoveIndex > 0 ? moveAnnotations.get(currentMoveIndex) : null;
   const moveColor = timeline[currentMoveIndex]?.move?.color;
   const finalTypes = finalPortraitTypes(source);
-  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerVideo, whitePlayerName, white, finalTypes?.white ?? (moveColor === "w" ? moveAnnotation?.type : ""));
-  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerVideo, blackPlayerName, black, finalTypes?.black ?? (moveColor === "b" ? moveAnnotation?.type : ""));
+  const openingTypes = openingPortraitTypes();
+  updatePlayerPortrait(whitePlayerPortrait, whitePlayerImage, whitePlayerVideo, whitePlayerName, white, finalTypes?.white ?? openingTypes?.white ?? (moveColor === "w" ? moveAnnotation?.type : ""));
+  updatePlayerPortrait(blackPlayerPortrait, blackPlayerImage, blackPlayerVideo, blackPlayerName, black, finalTypes?.black ?? openingTypes?.black ?? (moveColor === "b" ? moveAnnotation?.type : ""));
   playerPortraits.hidden = !white && !black;
+}
+
+function openingPortraitTypes() {
+  return currentMoveIndex === 0 && timeline.length > 1
+    ? { white: "greeting", black: "greeting" }
+    : null;
 }
 
 function finalPortraitTypes(source) {
